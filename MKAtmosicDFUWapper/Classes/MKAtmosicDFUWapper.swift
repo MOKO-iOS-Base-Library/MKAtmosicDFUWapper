@@ -24,8 +24,8 @@ import blelib
     private var failedBlock: ((Error) -> Void)?
 
     private let observerName = "MKAtmosicDFUWapper"
-    private let maxConnectAttempts = 17
-    private let connectInterval: TimeInterval = 0.3
+    private let maxConnectAttempts = 5
+    private let connectInterval: TimeInterval = 1.0
 
     @objc public func startOTA(filePath: String,
                                peripheral: CBPeripheral,
@@ -47,13 +47,15 @@ import blelib
         otaManager?.registerObserver(observerName: observerName, observer: self)
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
 
-        tryConnect(peripheral: peripheral, attempt: 0)
+        let identifier = peripheral.identifier.uuidString
+        tryConnect(deviceIdentifier: identifier, attempt: 0)
     }
 
-    /// blelib.invoke() creates a CBCentralManager that needs time to reach .poweredOn.
-    /// Calling connect() before that triggers "API MISUSE" and silently fails.
-    /// Delay before each connect attempt, retry until OnConnected fires or timeout (~5s).
-    private func tryConnect(peripheral: CBPeripheral, attempt: Int) {
+    /// invoke() creates a CBCentralManager that needs ~1s to reach .poweredOn.
+    /// Use connect(deviceIdentifier:) so blelib's own CBCentralManager retrieves
+    /// the peripheral by UUID instead of reusing a CBPeripheral from another
+    /// CBCentralManager.
+    private func tryConnect(deviceIdentifier: String, attempt: Int) {
         if attempt >= maxConnectAttempts {
             handleFailure("Bluetooth is not ready, please try again")
             return
@@ -62,8 +64,8 @@ import blelib
 
         DispatchQueue.main.asyncAfter(deadline: .now() + connectInterval) { [weak self] in
             guard let self = self, !self.isConnected else { return }
-            self.bleManager.connect(peripheral: peripheral)
-            self.tryConnect(peripheral: peripheral, attempt: attempt + 1)
+            self.bleManager.connect(deviceIdentifier: deviceIdentifier)
+            self.tryConnect(deviceIdentifier: deviceIdentifier, attempt: attempt + 1)
         }
     }
 
@@ -71,6 +73,12 @@ import blelib
         bleManager.disconnect()
         bleManager.unregisterBleManagerDelegate(observerName)
         otaManager = nil
+        cleanupLogFile()
+    }
+
+    private func cleanupLogFile() {
+        let logUrl = bleManager.getCurrentLogUrl()
+        try? FileManager.default.removeItem(at: logUrl)
     }
 
     private func handleFailure(_ msg: String) {
@@ -158,6 +166,7 @@ extension MKAtmosicDFUWapper: OnATTaskObserver {
         DispatchQueue.main.async {
             self.sucBlock?()
         }
+        cleanupLogFile()
     }
 
     public func OnUserDataUpdated() {}
