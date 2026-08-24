@@ -19,6 +19,7 @@ import blelib
     private var isConnected = false
     private var isScanning = false
     private var isCallbackCalled = false
+    private var isCleanedUp = false
     private var targetIdentifier: String?
 
     private var progressBlock: ((CGFloat) -> Void)?
@@ -39,6 +40,7 @@ import blelib
         self.isConnected = false
         self.isScanning = false
         self.isCallbackCalled = false
+        self.isCleanedUp = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -69,12 +71,18 @@ import blelib
     }
 
     @objc public func cancel() {
+        cleanup()
+    }
+
+    private func cleanup() {
+        guard !isCleanedUp else { return }
+        isCleanedUp = true
         if isScanning {
             bleManager.stopScan()
         }
+        otaManager = nil
         bleManager.disconnect()
         bleManager.unregisterBleManagerDelegate(observerName)
-        otaManager = nil
         cleanupLogFile()
     }
 
@@ -92,6 +100,7 @@ import blelib
                                 userInfo: [NSLocalizedDescriptionKey: msg])
             self.failedBlock?(error)
         }
+        cleanup()
     }
 }
 
@@ -121,14 +130,11 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         if !isOTAStarted && !isScanning {
             handleFailure("Device disconnected before OTA started")
         } else if isOTAStarted && !isCallbackCalled {
-            // OTA started and device disconnected — firmware update complete.
-            // OnFirmwareUpdatedSuccess may not fire in all SDK versions,
-            // so treat post-OTA disconnection as success.
             isCallbackCalled = true
             DispatchQueue.main.async {
                 self.sucBlock?()
             }
-            cleanupLogFile()
+            cleanup()
         }
     }
 
@@ -180,7 +186,7 @@ extension MKAtmosicDFUWapper: OnATTaskObserver {
         DispatchQueue.main.async {
             self.sucBlock?()
         }
-        cleanupLogFile()
+        cleanup()
     }
 
     public func OnUserDataUpdated() {}
