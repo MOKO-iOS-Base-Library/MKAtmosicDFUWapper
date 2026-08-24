@@ -17,12 +17,15 @@ import blelib
     private var peripheral: CBPeripheral?
     private var fileUrl: URL?
     private var isOTAStarted = false
+    private var isConnected = false
 
     private var progressBlock: ((CGFloat) -> Void)?
     private var sucBlock: (() -> Void)?
     private var failedBlock: ((Error) -> Void)?
 
     private let observerName = "MKAtmosicDFUWapper"
+    private let maxConnectAttempts = 17
+    private let connectInterval: TimeInterval = 0.3
 
     @objc public func startOTA(filePath: String,
                                peripheral: CBPeripheral,
@@ -32,6 +35,7 @@ import blelib
         self.peripheral = peripheral
         self.fileUrl = URL(fileURLWithPath: filePath)
         self.isOTAStarted = false
+        self.isConnected = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -43,7 +47,27 @@ import blelib
         otaManager?.registerObserver(observerName: observerName, observer: self)
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
 
+        tryConnect(peripheral: peripheral, attempt: 0)
+    }
+
+    /// blelib.invoke() creates a CBCentralManager that needs time to reach .poweredOn.
+    /// Calling connect() before that triggers "API MISUSE" and silently fails.
+    /// Retry connect every 0.3s until OnConnected fires or timeout (~5s).
+    private func tryConnect(peripheral: CBPeripheral, attempt: Int) {
+        if attempt >= maxConnectAttempts {
+            handleFailure("Bluetooth is not ready, please try again")
+            return
+        }
+        if isConnected { return }
+
         bleManager.connect(peripheral: peripheral)
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + connectInterval) { [weak self] in
+            guard let self = self else { return }
+            if !self.isConnected {
+                self.tryConnect(peripheral: peripheral, attempt: attempt + 1)
+            }
+        }
     }
 
     @objc public func cancel() {
@@ -70,10 +94,12 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func UpdateFoundPeripheralList(wrapPeripherals: [WrapScanResult]) {}
 
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
+        isConnected = true
         otaManager?.queryInfo()
     }
 
     public func OnDisconnected() {
+        isConnected = false
         if !isOTAStarted {
             handleFailure("Device disconnected before OTA started")
         }
