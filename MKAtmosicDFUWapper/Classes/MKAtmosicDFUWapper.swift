@@ -18,6 +18,7 @@ import blelib
     private var isOTAStarted = false
     private var isConnected = false
     private var isScanning = false
+    private var isCallbackCalled = false
     private var targetIdentifier: String?
 
     private var progressBlock: ((CGFloat) -> Void)?
@@ -37,6 +38,7 @@ import blelib
         self.isOTAStarted = false
         self.isConnected = false
         self.isScanning = false
+        self.isCallbackCalled = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -82,6 +84,8 @@ import blelib
     }
 
     private func handleFailure(_ msg: String) {
+        guard !isCallbackCalled else { return }
+        isCallbackCalled = true
         DispatchQueue.main.async {
             let error = NSError(domain: "com.moko.atmosicDfu",
                                 code: -999,
@@ -116,6 +120,15 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         isConnected = false
         if !isOTAStarted && !isScanning {
             handleFailure("Device disconnected before OTA started")
+        } else if isOTAStarted && !isCallbackCalled {
+            // OTA started and device disconnected — firmware update complete.
+            // OnFirmwareUpdatedSuccess may not fire in all SDK versions,
+            // so treat post-OTA disconnection as success.
+            isCallbackCalled = true
+            DispatchQueue.main.async {
+                self.sucBlock?()
+            }
+            cleanupLogFile()
         }
     }
 
@@ -162,6 +175,8 @@ extension MKAtmosicDFUWapper: OnATTaskObserver {
     public func OnReconnecting() {}
 
     public func OnFirmwareUpdatedSuccess() {
+        guard !isCallbackCalled else { return }
+        isCallbackCalled = true
         DispatchQueue.main.async {
             self.sucBlock?()
         }
