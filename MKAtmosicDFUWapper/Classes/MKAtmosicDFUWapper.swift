@@ -110,7 +110,6 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
         isConnected = true
-        otaManager?.queryInfo()
     }
 
     public func OnDisconnected() {
