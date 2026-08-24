@@ -52,7 +52,7 @@ import blelib
 
     /// blelib.invoke() creates a CBCentralManager that needs time to reach .poweredOn.
     /// Calling connect() before that triggers "API MISUSE" and silently fails.
-    /// Retry connect every 0.3s until OnConnected fires or timeout (~5s).
+    /// Delay before each connect attempt, retry until OnConnected fires or timeout (~5s).
     private func tryConnect(peripheral: CBPeripheral, attempt: Int) {
         if attempt >= maxConnectAttempts {
             handleFailure("Bluetooth is not ready, please try again")
@@ -60,13 +60,10 @@ import blelib
         }
         if isConnected { return }
 
-        bleManager.connect(peripheral: peripheral)
-
         DispatchQueue.main.asyncAfter(deadline: .now() + connectInterval) { [weak self] in
-            guard let self = self else { return }
-            if !self.isConnected {
-                self.tryConnect(peripheral: peripheral, attempt: attempt + 1)
-            }
+            guard let self = self, !self.isConnected else { return }
+            self.bleManager.connect(peripheral: peripheral)
+            self.tryConnect(peripheral: peripheral, attempt: attempt + 1)
         }
     }
 
