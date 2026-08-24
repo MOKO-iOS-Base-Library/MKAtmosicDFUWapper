@@ -14,28 +14,29 @@ import blelib
 
     private let bleManager: BleManager = .shared
     private var otaManager: OtaTaskManager?
-    private var peripheral: CBPeripheral?
     private var fileUrl: URL?
     private var isOTAStarted = false
     private var isConnected = false
+    private var isScanning = false
+    private var targetIdentifier: String?
 
     private var progressBlock: ((CGFloat) -> Void)?
     private var sucBlock: (() -> Void)?
     private var failedBlock: ((Error) -> Void)?
 
     private let observerName = "MKAtmosicDFUWapper"
-    private let maxConnectAttempts = 3
-    private let connectInterval: TimeInterval = 3.0
+    private let scanTimeout: TimeInterval = 15.0
 
     @objc public func startOTA(filePath: String,
-                               peripheral: CBPeripheral,
+                               deviceIdentifier: String,
                                progressBlock: @escaping (CGFloat) -> Void,
                                sucBlock: @escaping () -> Void,
                                failedBlock: @escaping (Error) -> Void) {
-        self.peripheral = peripheral
+        self.targetIdentifier = deviceIdentifier
         self.fileUrl = URL(fileURLWithPath: filePath)
         self.isOTAStarted = false
         self.isConnected = false
+        self.isScanning = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -47,24 +48,28 @@ import blelib
         otaManager?.registerObserver(observerName: observerName, observer: self)
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
 
-        tryConnect(peripheral: peripheral, attempt: 0)
-    }
-
-    private func tryConnect(peripheral: CBPeripheral, attempt: Int) {
-        if attempt >= maxConnectAttempts {
-            handleFailure("Bluetooth is not ready, please try again")
-            return
-        }
-        if isConnected { return }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + connectInterval) { [weak self] in
+        // Wait for CBCentralManager to power on, then start scanning.
+        // BleManager must discover the device itself — OnConnected needs
+        // a WrapScanResult that only scanning can create.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             guard let self = self, !self.isConnected else { return }
-            self.bleManager.connect(peripheral: peripheral)
-            self.tryConnect(peripheral: peripheral, attempt: attempt + 1)
+            self.isScanning = true
+            self.bleManager.scanPeripherals()
+
+            // Scan timeout
+            DispatchQueue.main.asyncAfter(deadline: .now() + self.scanTimeout) { [weak self] in
+                guard let self = self, self.isScanning, !self.isConnected else { return }
+                self.isScanning = false
+                self.bleManager.stopScan()
+                self.handleFailure("Device not found, please try again")
+            }
         }
     }
 
     @objc public func cancel() {
+        if isScanning {
+            bleManager.stopScan()
+        }
         bleManager.disconnect()
         bleManager.unregisterBleManagerDelegate(observerName)
         otaManager = nil
@@ -89,7 +94,17 @@ import blelib
 // MARK: - BleManagerDelegate
 extension MKAtmosicDFUWapper: BleManagerDelegate {
 
-    public func OnFoundPeripheral(wrapPeripheral: WrapScanResult) {}
+    public func OnFoundPeripheral(wrapPeripheral: WrapScanResult) {
+        guard isScanning, !isConnected,
+              let peripheral = wrapPeripheral.peripheral,
+              let target = targetIdentifier else { return }
+
+        if peripheral.identifier.uuidString == target {
+            isScanning = false
+            bleManager.stopScan()
+            bleManager.connect(peripheral: peripheral)
+        }
+    }
 
     public func UpdateFoundPeripheralList(wrapPeripherals: [WrapScanResult]) {}
 
@@ -100,7 +115,7 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnDisconnected() {
         isConnected = false
-        if !isOTAStarted {
+        if !isOTAStarted && !isScanning {
             handleFailure("Device disconnected before OTA started")
         }
     }
