@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'MKAtmosicDFUWapper'
-  s.version          = '0.0.1'
+  s.version          = '0.1.1'
   s.summary          = 'Atmosic DFU wrapper for BLE firmware updates.'
   s.description      = <<-DESC
   Wraps the Atmosic blelib SDK to provide a simple Objective-C interface for OTA firmware updates.
