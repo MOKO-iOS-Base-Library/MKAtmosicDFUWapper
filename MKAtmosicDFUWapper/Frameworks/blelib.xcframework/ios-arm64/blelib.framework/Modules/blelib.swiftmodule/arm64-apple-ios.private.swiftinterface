@@ -1,0 +1,1038 @@
+// swift-interface-format-version: 1.0
+// swift-compiler-version: Apple Swift version 6.3 effective-5.10 (swiftlang-6.3.0.123.5 clang-2100.0.123.102)
+// swift-module-flags: -target arm64-apple-ios14.5 -enable-objc-interop -enable-library-evolution -swift-version 5 -O -enable-experimental-feature DebugDescriptionMacro -enable-bare-slash-regex -module-name blelib
+// swift-module-flags-ignorable: -no-verify-emitted-module-interface -formal-cxx-interoperability-mode=off -interface-compiler-version 6.3
+import CommonCrypto
+import CoreBluetooth
+import CoreLocation
+import DeveloperToolsSupport
+import Foundation
+import Swift
+import SwiftCBOR
+import SwiftProtobuf
+import SwiftUI
+import UIKit
+import _Concurrency
+import _StringProcessing
+import _SwiftConcurrencyShims
+@_exported import blelib
+import os
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskWriteBackCachedData : blelib.OtaTask {
+  @objc deinit
+}
+public class SensorDataParser {
+  public init(_ extractedMafData: [Swift.UInt8], _ offset: Swift.Int)
+  public func getTemp() -> Swift.Float
+  public func getHumid() -> Swift.Int
+  public func getXAcceleration() -> Swift.Float
+  public func getYAcceleration() -> Swift.Float
+  public func getZAcceleration() -> Swift.Float
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskCheckNvdsToWrite : blelib.OtaTask {
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskUnlockSession : blelib.OtaTask {
+  @objc deinit
+}
+public enum UpgradeCopyFlags : Swift.UInt8 {
+  case UPGRADE_COPY_FLAGS_DATA_CHECK
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+public protocol BootloaderModeCallback {
+  func onResponse(resp: blelib.BootloaderInfoResponse)
+  func onError(errCode: Swift.Int)
+}
+public protocol ImageStateCallback {
+  func onResponse(resp: blelib.McuMgrImageStateResponse)
+  func onError(errCode: Swift.Int)
+}
+public protocol ImageUploadCallback {
+  func onResponse(resp: blelib.McuMgrUploadResponse)
+  func onError(errCode: Swift.Int)
+}
+public protocol ImageEraseCallback {
+  func onResponse(resp: blelib.McuMgrResponse)
+  func onError(errCode: Swift.Int)
+  func onEraseStarted()
+}
+public protocol ImageConfirmCallback {
+  func onResponse(resp: blelib.McuMgrImageStateResponse)
+  func onError(errCode: Swift.Int)
+}
+public protocol ImageTestCallback {
+  func onResponse(resp: blelib.McuMgrImageStateResponse)
+  func onError(errCode: Swift.Int)
+}
+public protocol ImageResetCallback {
+  func onResponse(resp: blelib.McuMgrResponse)
+  func onError(errCode: Swift.Int)
+}
+public protocol McuMgrParamsCallback {
+  func onReponse(resp: blelib.McuMgrParamsResonse)
+  func onError(errCode: Swift.Int)
+}
+extension Foundation.Data {
+  public init<T>(from value: T)
+  public func read<T>(offset: Swift.Int = 0) -> T where T : Swift.FixedWidthInteger
+  public func readBigEndian<R>(offset: Swift.Int = 0) -> R where R : Swift.FixedWidthInteger
+  public struct HexEncodingOptions : Swift.OptionSet {
+    public static let upperCase: Foundation.Data.HexEncodingOptions
+    public static let byteSpacing: Foundation.Data.HexEncodingOptions
+    public static let prepend0x: Foundation.Data.HexEncodingOptions
+    public static let twoByteSpacing: Foundation.Data.HexEncodingOptions
+    public static let reverseEndianness: Foundation.Data.HexEncodingOptions
+    public let rawValue: Swift.Int
+    public init(rawValue: Swift.Int)
+    @available(iOS 8.0, tvOS 9.0, watchOS 2.0, macOS 10.10, *)
+    public typealias ArrayLiteralElement = Foundation.Data.HexEncodingOptions
+    @available(iOS 8.0, tvOS 9.0, watchOS 2.0, macOS 10.10, *)
+    public typealias Element = Foundation.Data.HexEncodingOptions
+    @available(iOS 8.0, tvOS 9.0, watchOS 2.0, macOS 10.10, *)
+    public typealias RawValue = Swift.Int
+  }
+  public func hexEncodedString(options: Foundation.Data.HexEncodingOptions = []) -> Swift.String
+  public func fragment(size: Swift.Int) -> [Foundation.Data]
+  public func sha256() -> [Swift.UInt8]
+}
+public enum UpgradeGetProgrammedStateFlags : Swift.UInt8 {
+  case UPGRADE_GET_PROGRAM_STATE_ACTIVE_PART
+  case UPGRADE_GET_PROGRAM_STATE_ERASED
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class CRC {
+  public func crcInit() -> Swift.UInt32
+  public func crcUpdate(crc: Swift.UInt32, data: [Swift.UInt8]) -> Swift.UInt32
+  public func crcFinalize(crc: Swift.UInt32) -> Swift.UInt32
+  @objc deinit
+}
+public class ATCommandEntry : Swift.CustomDebugStringConvertible {
+  public var desc: Swift.String
+  public var command: Swift.String
+  public var unit: Swift.String
+  public var params: [Swift.String]
+  public var param: Swift.String
+  public init()
+  public init(textCmd: Swift.String)
+  public var debugDescription: Swift.String {
+    get
+  }
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskCopyBinArea : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class TaskEraseSectors : blelib.OtaTask {
+  @objc deinit
+}
+public enum McuMgrReturnCode : Swift.UInt64, Swift.Error {
+  case ok
+  case unknown
+  case noMemory
+  case inValue
+  case timeout
+  case noEntry
+  case badState
+  case responseIsTooLong
+  case unsupported
+  case corruptPayload
+  case busy
+  case accessDenied
+  case unrecognized
+  public func isSuccess() -> Swift.Bool
+  public func isError() -> Swift.Bool
+  public init?(rawValue: Swift.UInt64)
+  public typealias RawValue = Swift.UInt64
+  public var rawValue: Swift.UInt64 {
+    get
+  }
+}
+extension blelib.McuMgrReturnCode : Swift.CustomStringConvertible {
+  public var description: Swift.String {
+    get
+  }
+}
+extension blelib.McuMgrReturnCode : Swift.CustomDebugStringConvertible {
+  public var debugDescription: Swift.String {
+    get
+  }
+}
+public enum McuMgrScheme {
+  case ble, coapBle, coapUdp
+  public static func == (a: blelib.McuMgrScheme, b: blelib.McuMgrScheme) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+@_inheritsConvenienceInitializers open class McuMgrResponse : blelib.CBORMappable {
+  public var rc: Swift.UInt64
+  public var groupRC: blelib.McuMgrGroupReturnCode?
+  public var scheme: blelib.McuMgrScheme!
+  public var rawData: Foundation.Data?
+  public var header: blelib.McuMgrHeader!
+  public var payload: SwiftCBOR.CBOR?
+  public var payloadData: Foundation.Data?
+  public var result: Swift.Result<Swift.Void, blelib.McuMgrError>
+  public var coapCode: Swift.Int
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  public func getError() -> (any Foundation.LocalizedError)?
+  public static func getExpectedLength(responseData: Foundation.Data) -> Swift.Int?
+  @objc deinit
+}
+extension blelib.McuMgrResponse : Swift.CustomDebugStringConvertible {
+  public var debugDescription: Swift.String {
+    get
+  }
+}
+public enum McuMgrResponseParseError : Swift.Error {
+  case invalidDataSize
+  case invalidPayload
+  public static func == (a: blelib.McuMgrResponseParseError, b: blelib.McuMgrResponseParseError) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension blelib.McuMgrResponseParseError : Foundation.LocalizedError {
+  public var errorDescription: Swift.String? {
+    get
+  }
+}
+@_inheritsConvenienceInitializers final public class AppInfoResponse : blelib.McuMgrResponse {
+  final public var response: Swift.String!
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  @objc deinit
+}
+@_inheritsConvenienceInitializers final public class BootloaderInfoResponse : blelib.McuMgrResponse {
+  public enum Mode : Swift.Int, Swift.Codable, Swift.CustomDebugStringConvertible {
+    case unknown
+    case singleApplication
+    case swapUsingScratch
+    case overwrite
+    case swapNoScratch
+    case directXIPNoRevert
+    case directXIPWithRevert
+    case RAMLoader
+    public var isDirectXIP: Swift.Bool {
+      get
+    }
+    public var debugDescription: Swift.String {
+      get
+    }
+    public init?(rawValue: Swift.Int)
+    public typealias RawValue = Swift.Int
+    public var rawValue: Swift.Int {
+      get
+    }
+  }
+  final public var bootloader: Swift.String?
+  final public var mode: blelib.BootloaderInfoResponse.Mode?
+  final public var noDowngrade: Swift.Bool?
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class McuMgrImageStateResponse : blelib.McuMgrResponse {
+  public var images: [blelib.McuMgrImageStateResponse.ImageSlot]?
+  public var splitStatus: Swift.UInt64?
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  @objc deinit
+}
+extension blelib.McuMgrImageStateResponse {
+  @_inheritsConvenienceInitializers public class ImageSlot : blelib.CBORMappable, Swift.CustomDebugStringConvertible {
+    public var image: Swift.UInt64 {
+      get
+    }
+    public var slot: Swift.UInt64 {
+      get
+    }
+    public var version: Swift.String? {
+      get
+    }
+    public var hash: [Swift.UInt8] {
+      get
+    }
+    public var bootable: Swift.Bool {
+      get
+    }
+    public var pending: Swift.Bool {
+      get
+    }
+    public var confirmed: Swift.Bool {
+      get
+    }
+    public var active: Swift.Bool {
+      get
+    }
+    public var permanent: Swift.Bool {
+      get
+    }
+    public var debugDescription: Swift.String {
+      get
+    }
+    required public init(cbor: SwiftCBOR.CBOR?) throws
+    @objc deinit
+  }
+}
+@_inheritsConvenienceInitializers public class McuMgrUploadResponse : blelib.McuMgrResponse {
+  public var off: Swift.UInt?
+  public var match: Swift.Bool?
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  @objc deinit
+}
+@_inheritsConvenienceInitializers public class McuMgrParamsResonse : blelib.McuMgrResponse {
+  public var bufferSize: Swift.UInt64!
+  public var bufferCOunt: Swift.UInt64!
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  @objc deinit
+}
+public class WrapScanResult : Swift.Hashable {
+  public static func == (lhs: blelib.WrapScanResult, rhs: blelib.WrapScanResult) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var peripheral: CoreBluetooth.CBPeripheral? {
+    get
+  }
+  public var advName: Swift.String {
+    get
+  }
+  public var advData: [Swift.String : Any]? {
+    get
+  }
+  public var mafData: [Swift.UInt8]? {
+    get
+  }
+  public var rssi: Swift.Int {
+    get
+  }
+  public var isConnectable: Swift.Bool {
+    get
+  }
+  public var isWithAtmosicAdv: Swift.Bool {
+    get
+  }
+  public var atmosicFamily: blelib.AtmosicFamily {
+    get
+  }
+  public var atmosicExample: blelib.AtmosicExample {
+    get
+  }
+  public var getTemperature: Swift.Float {
+    get
+  }
+  public var getHumidity: Swift.Double {
+    get
+  }
+  public var getXAcceleration: Swift.Double {
+    get
+  }
+  public var getYAcceleration: Swift.Double {
+    get
+  }
+  public var getZAcceleration: Swift.Double {
+    get
+  }
+  public var isWithSensor: Swift.Bool {
+    get
+  }
+  public init(peripheral: CoreBluetooth.CBPeripheral, advName: Swift.String, advData: [Swift.String : Any], Rssi: Swift.Int)
+  public func update(advData: [Swift.String : Any], Rssi: Swift.Int)
+  public func discoveredTimeDeltaMili() -> Swift.Int64
+  @objc deinit
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+open class CBORMappable {
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  @objc deinit
+}
+public protocol OnATTaskObserver {
+  func OnTaskCompleted(completedTask: blelib.ATTask)
+  func OnTaskProgress(progressTask: blelib.ATTask, percentage: Swift.Float)
+  func OnTaskError(errorTask: blelib.ATTask, errorMsg: Swift.String)
+  func OnOverAllProgress(percentage: Swift.Float)
+  func OnReconnecting()
+  func OnFirmwareUpdatedSuccess()
+  func OnUserDataUpdated()
+  func OnBankSwitchError()
+}
+public protocol OnATOTAInfoObserver {
+  func OnFwVersionQueried(fwVersion: Swift.String)
+  func OnOtaProtocolVersion(protocolVersion: Swift.UInt8)
+}
+public enum UpgradeMessageID : Swift.UInt8 {
+  case UPGRADE_MESSAGE_ID_STATUS
+  case UPGRADE_MESSAGE_ID_COMPLETION
+  case UPGRADE_MESSAGE_ID_CANCEL
+  case UPGRADE_MESSAGE_ID_QUERY_INFO
+  case UPGRADE_MESSAGE_ID_QUERY_VERSION
+  case UPGRADE_MESSAGE_ID_LOCK_SESSION
+  case UPGRADE_MESSAGE_ID_UNLOCK_SESSION
+  case UPGRADE_MESSAGE_ID_WRITE_START
+  case UPGRADE_MESSAGE_ID_WRITE_CONT
+  case UPGRADE_MESSAGE_ID_COPY
+  case UPGRADE_MESSAGE_ID_READ
+  case UPGRADE_MESSAGE_ID_GET_PROGRAMMED_STATE
+  case UPGRADE_MESSAGE_ID_ERASE
+  case UPGRADE_MESSAGE_ID_SET_UPGRADE
+  case UPGRADE_MESSAGE_ID_REBOOT
+  case UPGRADE_MESSAGE_ID_PENDING_MSG
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class TaskReadFlash : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class OtaTask : blelib.ATTask {
+  @objc deinit
+}
+public enum UpgradeStatus : Swift.UInt8 {
+  case UPGRADE_STATUS_SUCCESS
+  case UPGRADE_STATUS_PENDING
+  case UPGRADE_STATUS_INVALID_PARAM
+  case UPGRADE_STATUS_UNSUPPORTED
+  case UPGRADE_STATUS_WRITE_FAILED
+  case UPGRADE_STATUS_ERASE_FAILED
+  case UPGRADE_STATUS_BUSY
+  case UPGRADE_STATUS_MISSING_FRAG
+  case UPGRADE_STATUS_NOT_ERASED
+  case UPGRADE_STATUS_INV_PART_STAT
+  case UPGRADE_STATUS_WR_BUF_OVER
+  case UPGRADE_STATUS_RESP_OVER
+  case UPGRADE_STATUS_CANCELLED
+  case UPGRADE_STATUS_READ_FAILED
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class AtmosicMafInfo {
+  public static let ComID: Swift.UInt16
+  public static let DeprecatedComID: Swift.UInt16
+  public static let ADV_SUPPORT_HARV_BIT: Swift.UInt8
+  public static let ADV_SUPPORT_RF_HARV_BIT: Swift.UInt8
+  public static let ADV_PLATFORM_ATMX2_ID: Swift.UInt8
+  public static let ADV_PLATFORM_ATM33_ID: Swift.UInt8
+  public static let ADV_PLATFORM_ATM34_ID: Swift.UInt8
+  public static let ADV_MAF_ID_PV_SENSOR: Swift.UInt8
+  public static let ADV_MAF_ID_VENDOR_APP: Swift.UInt8
+  public static let ADV_MAD_ID_BLE_SENSOR: Swift.UInt8
+  @objc deinit
+}
+public enum AtmosicFamily : Swift.String {
+  case ATM22XX
+  case ATM32XX
+  case ATM33XX
+  case ATM34XX
+  case UNKOWN
+  public init?(rawValue: Swift.String)
+  public typealias RawValue = Swift.String
+  public var rawValue: Swift.String {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class ATTask {
+  public func pollCmdQueue()
+  public func isCmdQueueEmpty() -> Swift.Bool
+  public func isRespSucess() -> Swift.Bool
+  public func isCompletedByRespCount() -> Swift.Bool
+  public func stop()
+  public func appendTagInfo(_ extraTag: Swift.String)
+  public func getTAG() -> Swift.String
+  public func getTaskProgressTag() -> blelib.TaskProgressTag
+  public func className() -> Swift.String
+  @objc deinit
+}
+public enum AtmosicExample : Swift.UInt8 {
+  case PVB_SENSOR
+  case EVK
+  case BEACON
+  case HID_REMOTE
+  case HID_KEYBOARD
+  case HID_MOUSE
+  case BLINKY
+  case ZRC_BLE_COMBO
+  case BLE_SENSOR
+  case UNKNOWN
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+public enum TaskProgressTag {
+  case Unknown
+  case Query
+  case ReadNvds
+  case Lock
+  case CheckArchive
+  case ReadBackActive1st4K
+  case EraseAtmFwArea
+  case CopyAtmFwnArea
+  case EraseActive1st4K
+  case WriteBackCacheActive1st4K
+  case VerifyAtmFwBefore
+  case EraseAtmFwChunks
+  case WriteAtmFwChunks
+  case VerifyAtmFwAfter
+  case EraseNvdsArea
+  case CopyNvdsArea
+  case EraseNvdsAreaChunks
+  case WriteNvdsAreaChunks
+  case VerifyUserDataBefore
+  case EraseUserDataChunks
+  case WriteUserDataChunks
+  case VerifyUserDataAfter
+  case SetProgrammed
+  case FirstBoot
+  case QueryAfterFirstBoot
+  case LockForGood
+  case SetPartitionGood
+  case NormalReboot
+  public static func == (a: blelib.TaskProgressTag, b: blelib.TaskProgressTag) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public enum McuMgrDfuState {
+  case idle
+  case connecting
+  case connected
+  case disconnected
+  case settingMtu
+  case queryingParams
+  case queryingImageSlots
+  case resolvingImage
+  case erasing
+  case uploading
+  case uploading_img0
+  case uploading_img1
+  case testing
+  case resetting
+  case reconnecting
+  case confirming
+  case updateCompleted
+  case failed
+  public static func == (a: blelib.McuMgrDfuState, b: blelib.McuMgrDfuState) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskQuery : blelib.OtaTask {
+  @objc deinit
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskReadNvds : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class TaskVerifyChunks : blelib.OtaTask {
+  @objc deinit
+}
+public enum NvdsProcessRule {
+  case SDK_53_PLUS
+  case SDK_52_LEGACY
+  public static func == (a: blelib.NvdsProcessRule, b: blelib.NvdsProcessRule) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class AtmosicGattUUID {
+  public static let ATMOSIC_OTA_SERVICE: CoreBluetooth.CBUUID
+  public static let ATMOISC_ATCMD_SERVICE: CoreBluetooth.CBUUID
+  public static let ATMOISC_ATCMD_SERVICE_SB: CoreBluetooth.CBUUID
+  public static let ATMOSIC_ATCMD_CHARACTERISTIC: CoreBluetooth.CBUUID
+  public static let ATMOSIC_ATCMD_CHARAC_SB: CoreBluetooth.CBUUID
+  public static let ATMOSIC_DTS_MAILBOX_CHARACTERISTIC: CoreBluetooth.CBUUID
+  public static let ATMOSIC_RF_SOURCE_SERVICE: CoreBluetooth.CBUUID
+  public static let ECHO_SERVICE: CoreBluetooth.CBUUID
+  public static let ECHO_RW_CHARAC: CoreBluetooth.CBUUID
+  public static let ECHO_NOTIFY_CHARC: CoreBluetooth.CBUUID
+  public static let ZRC_SERVICE: CoreBluetooth.CBUUID
+  public static let ZRC_RW_USER_STR_CHARC: CoreBluetooth.CBUUID
+  public static let ZRC_IND_STATUS_CHARC: CoreBluetooth.CBUUID
+  public static let ZRC_RW_KEYCODE_CHARC: CoreBluetooth.CBUUID
+  public static let SMP_SERVICE: CoreBluetooth.CBUUID
+  public static let SMP_CHAR: CoreBluetooth.CBUUID
+  @objc deinit
+}
+public enum TargetSection {
+  case ATM_FW
+  case NVDS
+  case USER_DATA
+  public static func == (a: blelib.TargetSection, b: blelib.TargetSection) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public class McuBootImage {
+  public static let IMG_HASH_LEN: Swift.Int
+  final public let header: blelib.McuMgrImageHeader
+  final public let tlv: blelib.McuMgrImageTlv
+  final public let data: Foundation.Data
+  final public let hash: Foundation.Data
+  public init(data: Foundation.Data) throws
+  @objc deinit
+}
+public class McuMgrImageHeader {
+  public static let IMG_HEADER_LEN: Swift.Int
+  public static let IMG_HEADER_MAGIC: Swift.UInt32
+  public static let IMG_HEADER_MAGIC_V1: Swift.UInt32
+  public static let MAGIC_OFFSET: Swift.Int
+  public static let LOAD_ADDR_OFFSET: Swift.Int
+  public static let HEADER_SIZE_OFFSET: Swift.Int
+  public static let IMAGE_SIZE_OFFSET: Swift.Int
+  public static let FLAGS_OFFSET: Swift.Int
+  final public let magic: Swift.UInt32
+  final public let loadAddr: Swift.UInt32
+  final public let headerSize: Swift.UInt16
+  final public let imageSize: Swift.UInt32
+  final public let flags: Swift.UInt32
+  final public let version: blelib.McuMgrImageVersion
+  public init(data: Foundation.Data) throws
+  public func isLegacy() -> Swift.Bool
+  @objc deinit
+}
+public class McuMgrImageVersion {
+  public static let VERSION_OFFSET: Swift.Int
+  final public let major: Swift.UInt8
+  final public let minor: Swift.UInt8
+  final public let revision: Swift.UInt16
+  final public let build: Swift.UInt32
+  public init(data: Foundation.Data, offset: Swift.Int = VERSION_OFFSET)
+  public func toString() -> Swift.String
+  @objc deinit
+}
+public struct McuMgrImageTlv {
+  public static let IMG_TLV_SHA256_V1: Swift.UInt8
+  public static let IMG_TLV_SHA256: Swift.UInt8
+  public static let IMG_TLV_RSA2048_PSS: Swift.UInt8
+  public static let IMG_TLV_ECDSA224: Swift.UInt8
+  public static let IMG_TLV_ECDSA256: Swift.UInt8
+  public static let IMG_TLV_RSA3072_PSS: Swift.UInt8
+  public static let IMG_TLV_ED25519: Swift.UInt8
+  public static let IMG_TLV_ENC_RSA2048: Swift.UInt8
+  public static let IMG_TLV_ENC_KW128: Swift.UInt8
+  public static let IMG_TLV_ENC_EC256: Swift.UInt8
+  public static let IMG_TLV_DEPENDENCY: Swift.Int
+  public static let IMG_TLV_UNPROTECTED_INFO_MAGIC: Swift.UInt16
+  public static let IMG_TLV_PROTECTED_INFO_MAGIC: Swift.UInt16
+  public var tlvInfo: blelib.McuMgrImageTlvInfo?
+  public var trailerTlvEntries: [blelib.McuMgrImageTlvTrailerEntry]
+  public var hash: Foundation.Data?
+  public init(data: Foundation.Data, imageHeader: blelib.McuMgrImageHeader, at offset: Swift.Int) throws
+}
+public struct McuMgrImageTlvInfo {
+  public let magic: Swift.UInt16
+  public let total: Swift.UInt16
+  public init(data: Foundation.Data, offset: Swift.Int) throws
+  public var isProtected: Swift.Bool {
+    get
+  }
+}
+public class McuMgrImageTlvTrailerEntry {
+  public static let MIN_SIZE: Swift.Int
+  final public let type: Swift.UInt8
+  final public let length: Swift.UInt16
+  final public let value: Foundation.Data
+  final public let size: Swift.Int
+  public init(data: Foundation.Data, offset: Swift.Int) throws
+  @objc deinit
+}
+public enum McuMgrImageParseError : Swift.Error {
+  case invalidHeaderMagic
+  case invalidTlvInfoMagic
+  case insufficientData
+  case hashNotFound
+  public static func == (a: blelib.McuMgrImageParseError, b: blelib.McuMgrImageParseError) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+extension blelib.McuMgrImageParseError : Foundation.LocalizedError {
+  public var errorDescription: Swift.String? {
+    get
+  }
+}
+public class TaskManager : blelib.BleManagerDelegate {
+  public func UpdateFoundPeripheralList(wrapPeripherals: [blelib.WrapScanResult])
+  public init(bleManager: blelib.BleManager)
+  public func registerObserver(observerName: Swift.String, observer: any blelib.OnATTaskObserver)
+  public func OnFoundPeripheral(wrapPeripheral: blelib.WrapScanResult)
+  public func OnConnected(wrapPeripheral: blelib.WrapScanResult, mtu: Swift.Int)
+  public func OnDisconnected()
+  public func OnFoundServices(services: [CoreBluetooth.CBService])
+  public func OnFounCharacteristics(charcs: [CoreBluetooth.CBCharacteristic])
+  public func OnCharcteristicChanged(charc: CoreBluetooth.CBCharacteristic)
+  public func OnCharacNotifyEnabled(charc: CoreBluetooth.CBCharacteristic)
+  public func OnCharacWrote(charc: CoreBluetooth.CBCharacteristic)
+  public func OnOtaCharcSetupDone()
+  @objc deinit
+}
+public enum UpgradeSetUpgradeStatus : Swift.UInt8 {
+  case UPGRADE_SET_UPGRADE_STATUS_PROGRAMMED
+  case UPGRADE_SET_UPGRADE_STATUS_GOOD
+  case UPGRADE_SET_UPGRADE_STATUS_BAD
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+public enum UpgradeRebootType : Swift.UInt8 {
+  case UPGRADE_REBOOT_TYPE_GOOD
+  case UPGRADE_REBOOT_TYPE_FIRST_BOOT
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class Converter {
+  public static func bytesToInt(_ byte: [Swift.UInt8]) -> Swift.Int
+  public static func intToBytes(_ num: Swift.Int, _ len: Swift.Int) -> [Swift.UInt8]
+  public static func intToBytes(_ num: Swift.Int) -> [Swift.UInt8]
+  public static func bytesToHexString(_ bytes: [Swift.UInt8]) -> Swift.String
+  public static func hexStringToData(_ str: Swift.String) -> Foundation.Data?
+  public static func uintToTwosComplement(_ num: Swift.Int, bitSize: Swift.Int) -> Swift.Int
+  @objc deinit
+}
+public enum UpgradeParamReadFlags : Swift.UInt8 {
+  case UPGRADE_PARAM_READ_FLAGS_ACTIVE_PART
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+@_hasMissingDesignatedInitializers public class TaskReboot : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class TaskWriteChunks : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class TaskSetUpgradeStatus : blelib.OtaTask {
+  @objc deinit
+}
+public class McuMgrHeader {
+  public static let HEADER_LENGTH: Swift.Int
+  final public let version: Swift.UInt8!
+  final public let op: Swift.UInt8!
+  final public let flags: Swift.UInt8!
+  final public let length: Swift.UInt16!
+  final public let groupId: Swift.UInt16!
+  final public let sequenceNumber: Swift.UInt8!
+  final public let commandId: Swift.UInt8!
+  public init(data: Foundation.Data) throws
+  public init(version: Swift.UInt8, op: Swift.UInt8, flags: Swift.UInt8, length: Swift.UInt16, groupId: Swift.UInt16, sequenceNumber: Swift.UInt8, commandId: Swift.UInt8)
+  public func toData() -> Foundation.Data
+  public static func build(version: Swift.UInt8, op: Swift.UInt8, flags: Swift.UInt8, len: Swift.UInt16, group: Swift.UInt16, seq: Swift.UInt8, id: Swift.UInt8) -> [Swift.UInt8]
+  @objc deinit
+}
+extension blelib.McuMgrHeader : Swift.CustomDebugStringConvertible {
+  public var debugDescription: Swift.String {
+    get
+  }
+}
+public enum McuMgrHeaderParseError : Swift.Error, Foundation.LocalizedError {
+  case invalidSize(Swift.Int)
+  public var errorDescription: Swift.String? {
+    get
+  }
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskCopyNvdsArea : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class TaskEraseInactiveSectors : blelib.OtaTask {
+  @objc deinit
+}
+@_hasMissingDesignatedInitializers public class AtmZephyrResolver {
+  public func getMcuBootImageList() throws -> [blelib.McuBootImage]
+  public func getMcuBootImage0() throws -> blelib.McuBootImage
+  public func getMcuBootImage1() throws -> blelib.McuBootImage
+  public func totalImageSize() -> Swift.Int
+  @objc deinit
+}
+public protocol McuMgrDfuCallback {
+  func onSlotState(resp: blelib.McuMgrImageStateResponse)
+  func onProgress(percentage: Swift.Float, speedKBs: Swift.Float, passSec: Swift.UInt, sentBytes: Swift.UInt)
+  func onUploadFinished()
+  func onErrorDfuBinConflicted()
+  func onErasingAndReseting()
+  func onError(taskName: Swift.String, errorCode: Swift.Int)
+  func onFirmwareUpdated()
+  func onResettingCountdown(remaining: Swift.Int)
+  func onOtaStateChange(state: blelib.McuMgrDfuState)
+  func onOtaError(error: blelib.McuMgrDfuError)
+}
+@objc public class ATCommandParser : ObjectiveC.NSObject {
+  public init(withXML xml: Swift.String)
+  public func parse() -> [blelib.ATCommandEntry]
+  @objc deinit
+}
+extension blelib.ATCommandParser : Foundation.XMLParserDelegate {
+  @objc dynamic public func parser(_ parser: Foundation.XMLParser, didStartElement elementName: Swift.String, namespaceURI: Swift.String?, qualifiedName qName: Swift.String?, attributes attributeDict: [Swift.String : Swift.String] = [:])
+  @objc dynamic public func parser(_ parser: Foundation.XMLParser, didEndElement elementName: Swift.String, namespaceURI: Swift.String?, qualifiedName qName: Swift.String?)
+  @objc dynamic public func parser(_ parser: Foundation.XMLParser, foundCharacters string: Swift.String)
+  public static func lookupDesc(cmd: Swift.String) -> Swift.String
+  public static func lookupUnit(cmd: Swift.String) -> Swift.String
+}
+@objc @_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class BleManager : ObjectiveC.NSObject, CoreBluetooth.CBCentralManagerDelegate, CoreBluetooth.CBPeripheralDelegate, CoreBluetooth.CBPeripheralManagerDelegate {
+  public var isConnected: Swift.Bool {
+    get
+  }
+  public static let shared: blelib.BleManager
+  public func invoke()
+  public func scanPeripherals()
+  public func stopScan()
+  public func connect(peripheral: CoreBluetooth.CBPeripheral)
+  public func connect(deviceIdentifier: Swift.String)
+  public func discoverServices(deviceIdentifier: Swift.String)
+  public func reconnect()
+  public func rediscoverServices()
+  public func disconnect()
+  public func disconnect(peripheral: CoreBluetooth.CBPeripheral?)
+  public func registerBleManagerDelegate(_ observerName: Swift.String, _ observer: any blelib.BleManagerDelegate)
+  public func unregisterBleManagerDelegate(_ observerName: Swift.String)
+  public func sendAtCmd(atcmd: Swift.String)
+  public func sendOtaCmd(cmd: [Swift.UInt8])
+  public func getCurrentMtu() -> Swift.Int
+  public func getCurrentLogUrl() -> Foundation.URL
+  @objc public func centralManagerDidUpdateState(_ central: CoreBluetooth.CBCentralManager)
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didDiscover peripheral: CoreBluetooth.CBPeripheral, advertisementData: [Swift.String : Any], rssi RSSI: Foundation.NSNumber)
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didConnect peripheral: CoreBluetooth.CBPeripheral)
+  @objc public func centralManager(_ central: CoreBluetooth.CBCentralManager, didDisconnectPeripheral peripheral: CoreBluetooth.CBPeripheral, error: (any Swift.Error)?)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didDiscoverServices error: (any Swift.Error)?)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didDiscoverCharacteristicsFor service: CoreBluetooth.CBService, error: (any Swift.Error)?)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didUpdateNotificationStateFor characteristic: CoreBluetooth.CBCharacteristic, error: (any Swift.Error)?)
+  @objc public func peripheralManagerDidUpdateState(_ peripheral: CoreBluetooth.CBPeripheralManager)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didWriteValueFor characteristic: CoreBluetooth.CBCharacteristic, error: (any Swift.Error)?)
+  @objc public func peripheral(_ peripheral: CoreBluetooth.CBPeripheral, didUpdateValueFor characteristic: CoreBluetooth.CBCharacteristic, error: (any Swift.Error)?)
+  public func advWakeUpPattern(enable: Swift.Bool)
+  public func setFilterDeviceName(filterName: Swift.String?)
+  public func setFilterRssiThrd(filterRssiThrd: Swift.Int?)
+  public func eanbleScanAtmosicBeaconFilter(_ enable: Swift.Bool)
+  public func isMatchEnabledScanFilter(advertisementData: [Swift.String : Any]?) -> Swift.Bool
+  public func readCharc(serviceUUID: CoreBluetooth.CBUUID, charcUUID: CoreBluetooth.CBUUID)
+  public func writeCharc(serviceUUID: CoreBluetooth.CBUUID, charcUUID: CoreBluetooth.CBUUID, data: Foundation.Data, isWithResp: Swift.Bool)
+  public func enableCharcNotify(serviceUUID: CoreBluetooth.CBUUID, charcUUID: CoreBluetooth.CBUUID)
+  public func sendEchoCmd(data: Foundation.Data)
+  public func sendZrcKeyCodeCmd(keycode: Swift.UInt8)
+  public func sendZrcUserBindCmd(data: Foundation.Data)
+  public func sendSmpCmd(data: Foundation.Data)
+  @objc deinit
+}
+public enum UpgradeEraseFlags : Swift.UInt8 {
+  case UPGRADE_ERASE_FLAGS_VERIFY_ERASE
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+public class DfuManager : blelib.BleManagerDelegate, blelib.ImageStateCallback, blelib.ImageUploadCallback, blelib.ImageTestCallback, blelib.ImageEraseCallback, blelib.ImageConfirmCallback, blelib.ImageResetCallback, blelib.BootloaderModeCallback, blelib.McuMgrParamsCallback {
+  public var reassemblyBufferSize: Swift.Int {
+    get
+  }
+  public init(bleManager: blelib.BleManager)
+  public func setDfuCallback(cb: any blelib.McuMgrDfuCallback)
+  public func checkArchive(selectedUri: Foundation.URL) throws
+  public func checkArchive(fileData: Foundation.Data) throws
+  public func getMcuBootImageList() throws -> [blelib.McuBootImage]
+  public func totalImageSize() -> Swift.Int
+  public func getMcuBootImage0() throws -> blelib.McuBootImage
+  public func getMcuBootImage1() throws -> blelib.McuBootImage
+  public func queryImageState()
+  public func startOta(peripheral: CoreBluetooth.CBPeripheral, fileData: Foundation.Data, cb: any blelib.McuMgrDfuCallback, forceConfirm: Swift.Bool = false)
+  public func uploadImageAndTest(image: blelib.McuBootImage?, imgIdx: Swift.UInt) async -> Swift.Bool
+  public func reset()
+  public enum DfuImageError : Swift.Error {
+    case NoCurrentImageSlotState
+    case DfuBinHashConflicted
+    case DfuBinParsingError
+    public static func == (a: blelib.DfuManager.DfuImageError, b: blelib.DfuManager.DfuImageError) -> Swift.Bool
+    public func hash(into hasher: inout Swift.Hasher)
+    public var hashValue: Swift.Int {
+      get
+    }
+  }
+  public func uploadImg(data: Foundation.Data)
+  public func sendSmpCmd(packet: Foundation.Data)
+  public func OnFoundPeripheral(wrapPeripheral: blelib.WrapScanResult)
+  public func UpdateFoundPeripheralList(wrapPeripherals: [blelib.WrapScanResult])
+  public func OnConnected(wrapPeripheral: blelib.WrapScanResult, mtu: Swift.Int)
+  public func OnDisconnected()
+  public func OnFoundServices(services: [CoreBluetooth.CBService])
+  public func OnFounCharacteristics(charcs: [CoreBluetooth.CBCharacteristic])
+  public func OnCharcteristicChanged(charc: CoreBluetooth.CBCharacteristic)
+  public func OnCharacNotifyEnabled(charc: CoreBluetooth.CBCharacteristic)
+  public func OnCharacWrote(charc: CoreBluetooth.CBCharacteristic)
+  public func OnOtaCharcSetupDone()
+  public func onResponse(resp: blelib.McuMgrImageStateResponse)
+  @objc deinit
+  public func onError(errCode: Swift.Int)
+  public func onResponse(resp: blelib.McuMgrUploadResponse)
+  public func onResponse(resp: blelib.McuMgrResponse)
+  public func onEraseStarted()
+  public func onResponse(resp: blelib.BootloaderInfoResponse)
+  public func onReponse(resp: blelib.McuMgrParamsResonse)
+  public func close()
+}
+public enum McuMgrError : Swift.Error, Foundation.LocalizedError {
+  case returnCode(_: blelib.McuMgrReturnCode)
+  case groupCode(_: blelib.McuMgrGroupReturnCode)
+}
+@_inheritsConvenienceInitializers public class McuMgrGroupReturnCode : blelib.CBORMappable {
+  public var group: Swift.UInt64
+  public var rc: Swift.UInt64
+  required public init(cbor: SwiftCBOR.CBOR?) throws
+  public init(map: [SwiftCBOR.CBOR : SwiftCBOR.CBOR]) throws
+  @objc deinit
+}
+public enum McuMgrDfuError : Swift.Error {
+  case connectionFailed
+  case paramQueryFailed
+  case imageSlotQueryFailed
+  case dfuBinConflicted
+  case invalidArchive
+  case image0UploadFailed
+  case image1UploadFailed
+  case resetFailed
+  case reconnectFailed
+  case confirmFailed
+  case uploadTimeout
+  case queryParamTimeout
+  case queryImageSlotsTimeout
+  case eraseSlot0Timeout
+  case eraseSlot1Timeout
+  case unknown
+  public static func == (a: blelib.McuMgrDfuError, b: blelib.McuMgrDfuError) -> Swift.Bool
+  public func hash(into hasher: inout Swift.Hasher)
+  public var hashValue: Swift.Int {
+    get
+  }
+}
+public enum QueriedPartitionStatus : Swift.UInt8 {
+  case Reserved
+  case NotFullyProgrammed
+  case Programmed
+  case FirstBoot
+  case Good
+  case Bad
+  public init?(rawValue: Swift.UInt8)
+  public typealias RawValue = Swift.UInt8
+  public var rawValue: Swift.UInt8 {
+    get
+  }
+}
+@_inheritsConvenienceInitializers public class OtaTaskManager : blelib.TaskManager {
+  override public init(bleManager manager: blelib.BleManager)
+  public func registerOtaInfoObserver(observerName: Swift.String, observer: any blelib.OnATOTAInfoObserver)
+  public func switchAtmx2NvdsHandling(isSdk52: Swift.Bool)
+  public func startFota(upgradeBin: Swift.Bool, upgradeNvds: Swift.Bool) throws
+  public func queryInfo()
+  public func readNvds()
+  public func lockSession()
+  public func unlockSession()
+  public func checkArchive(selectedFileUri: Foundation.URL) throws
+  override public func OnConnected(wrapPeripheral: blelib.WrapScanResult, mtu: Swift.Int)
+  override public func OnOtaCharcSetupDone()
+  override public func OnDisconnected()
+  @objc deinit
+}
+public enum OtaError : Swift.Error {
+  case runtimeError(Swift.String)
+}
+@_inheritsConvenienceInitializers @_hasMissingDesignatedInitializers public class TaskLockSession : blelib.OtaTask {
+  @objc deinit
+}
+public protocol BleManagerDelegate {
+  func OnFoundPeripheral(wrapPeripheral: blelib.WrapScanResult)
+  func UpdateFoundPeripheralList(wrapPeripherals: [blelib.WrapScanResult])
+  func OnConnected(wrapPeripheral: blelib.WrapScanResult, mtu: Swift.Int)
+  func OnDisconnected()
+  func OnFoundServices(services: [CoreBluetooth.CBService])
+  func OnFounCharacteristics(charcs: [CoreBluetooth.CBCharacteristic])
+  func OnCharcteristicChanged(charc: CoreBluetooth.CBCharacteristic)
+  func OnCharacNotifyEnabled(charc: CoreBluetooth.CBCharacteristic)
+  func OnCharacWrote(charc: CoreBluetooth.CBCharacteristic)
+  func OnOtaCharcSetupDone()
+}
+@_hasMissingDesignatedInitializers public class TaskEraseChunks : blelib.OtaTask {
+  @objc deinit
+}
+public protocol SmpSetupDelegate {
+  func OnSmpCharSetupDone()
+}
+extension blelib.UpgradeCopyFlags : Swift.Equatable {}
+extension blelib.UpgradeCopyFlags : Swift.Hashable {}
+extension blelib.UpgradeCopyFlags : Swift.RawRepresentable {}
+extension blelib.UpgradeGetProgrammedStateFlags : Swift.Equatable {}
+extension blelib.UpgradeGetProgrammedStateFlags : Swift.Hashable {}
+extension blelib.UpgradeGetProgrammedStateFlags : Swift.RawRepresentable {}
+extension blelib.McuMgrReturnCode : Swift.Equatable {}
+extension blelib.McuMgrReturnCode : Swift.Hashable {}
+extension blelib.McuMgrReturnCode : Swift.RawRepresentable {}
+extension blelib.McuMgrScheme : Swift.Equatable {}
+extension blelib.McuMgrScheme : Swift.Hashable {}
+extension blelib.McuMgrResponseParseError : Swift.Equatable {}
+extension blelib.McuMgrResponseParseError : Swift.Hashable {}
+extension blelib.BootloaderInfoResponse.Mode : Swift.Equatable {}
+extension blelib.BootloaderInfoResponse.Mode : Swift.Hashable {}
+extension blelib.BootloaderInfoResponse.Mode : Swift.RawRepresentable {}
+extension blelib.UpgradeMessageID : Swift.Equatable {}
+extension blelib.UpgradeMessageID : Swift.Hashable {}
+extension blelib.UpgradeMessageID : Swift.RawRepresentable {}
+extension blelib.UpgradeStatus : Swift.Equatable {}
+extension blelib.UpgradeStatus : Swift.Hashable {}
+extension blelib.UpgradeStatus : Swift.RawRepresentable {}
+extension blelib.AtmosicFamily : Swift.Equatable {}
+extension blelib.AtmosicFamily : Swift.Hashable {}
+extension blelib.AtmosicFamily : Swift.RawRepresentable {}
+extension blelib.AtmosicExample : Swift.Equatable {}
+extension blelib.AtmosicExample : Swift.Hashable {}
+extension blelib.AtmosicExample : Swift.RawRepresentable {}
+extension blelib.TaskProgressTag : Swift.Equatable {}
+extension blelib.TaskProgressTag : Swift.Hashable {}
+extension blelib.McuMgrDfuState : Swift.Equatable {}
+extension blelib.McuMgrDfuState : Swift.Hashable {}
+extension blelib.NvdsProcessRule : Swift.Equatable {}
+extension blelib.NvdsProcessRule : Swift.Hashable {}
+extension blelib.TargetSection : Swift.Equatable {}
+extension blelib.TargetSection : Swift.Hashable {}
+extension blelib.McuMgrImageParseError : Swift.Equatable {}
+extension blelib.McuMgrImageParseError : Swift.Hashable {}
+extension blelib.UpgradeSetUpgradeStatus : Swift.Equatable {}
+extension blelib.UpgradeSetUpgradeStatus : Swift.Hashable {}
+extension blelib.UpgradeSetUpgradeStatus : Swift.RawRepresentable {}
+extension blelib.UpgradeRebootType : Swift.Equatable {}
+extension blelib.UpgradeRebootType : Swift.Hashable {}
+extension blelib.UpgradeRebootType : Swift.RawRepresentable {}
+extension blelib.UpgradeParamReadFlags : Swift.Equatable {}
+extension blelib.UpgradeParamReadFlags : Swift.Hashable {}
+extension blelib.UpgradeParamReadFlags : Swift.RawRepresentable {}
+extension blelib.UpgradeEraseFlags : Swift.Equatable {}
+extension blelib.UpgradeEraseFlags : Swift.Hashable {}
+extension blelib.UpgradeEraseFlags : Swift.RawRepresentable {}
+extension blelib.DfuManager.DfuImageError : Swift.Equatable {}
+extension blelib.DfuManager.DfuImageError : Swift.Hashable {}
+extension blelib.McuMgrDfuError : Swift.Equatable {}
+extension blelib.McuMgrDfuError : Swift.Hashable {}
+extension blelib.QueriedPartitionStatus : Swift.Equatable {}
+extension blelib.QueriedPartitionStatus : Swift.Hashable {}
+extension blelib.QueriedPartitionStatus : Swift.RawRepresentable {}
