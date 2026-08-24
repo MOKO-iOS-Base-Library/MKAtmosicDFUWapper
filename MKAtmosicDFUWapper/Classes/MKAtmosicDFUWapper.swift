@@ -130,19 +130,9 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnCharacWrote(charc: CBCharacteristic) {}
 
     public func OnOtaCharcSetupDone() {
-        guard let url = fileUrl else {
-            handleFailure("Firmware file URL is invalid")
-            return
-        }
-        do {
-            try otaManager?.checkArchive(selectedFileUri: url)
-            try otaManager?.startFota(upgradeBin: true, upgradeNvds: false)
-            isOTAStarted = true
-        } catch OtaError.runtimeError(let msg) {
-            handleFailure(msg)
-        } catch {
-            handleFailure("Failed to start OTA")
-        }
+        // Retrieve FW OTA config first — checkArchive/startFota
+        // will fail with "Need to retrive FW OTA Config" without this.
+        otaManager?.queryInfo()
     }
 }
 
@@ -190,5 +180,20 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
 
     public func OnFwVersionQueried(fwVersion: String) {}
 
-    public func OnOtaProtocolVersion(protocolVersion: UInt8) {}
+    public func OnOtaProtocolVersion(protocolVersion: UInt8) {
+        // FW OTA config retrieved, now safe to start OTA.
+        guard let url = fileUrl else {
+            handleFailure("Firmware file URL is invalid")
+            return
+        }
+        do {
+            try otaManager?.checkArchive(selectedFileUri: url)
+            try otaManager?.startFota(upgradeBin: true, upgradeNvds: false)
+            isOTAStarted = true
+        } catch OtaError.runtimeError(let msg) {
+            handleFailure(msg)
+        } catch {
+            handleFailure("Failed to start OTA")
+        }
+    }
 }
