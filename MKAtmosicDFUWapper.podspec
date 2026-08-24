@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'MKAtmosicDFUWapper'
-  s.version          = '0.1.0'
+  s.version          = '0.0.1'
   s.summary          = 'Atmosic DFU wrapper for BLE firmware updates.'
   s.description      = <<-DESC
   Wraps the Atmosic blelib SDK to provide a simple Objective-C interface for OTA firmware updates.
@@ -8,9 +8,9 @@ Pod::Spec.new do |s|
   s.homepage         = 'https://github.com/MOKO-iOS-Base-Library/MKAtmosicDFUWapper'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
   s.author           = { 'lovexiaoxia' => 'aadyx2007@163.com' }
-  s.source           = { :git => 'https://github.com/MOKO-iOS-Base-Library/MKAtmosicDFUWapper.git', :tag => s.version.to_s }
+  s.source           = { :git => 'git@github.com:MOKO-iOS-Base-Library/MKAtmosicDFUWapper.git', :tag => s.version.to_s }
 
-  s.ios.deployment_target = '14.0'
+  s.ios.deployment_target = '18.0'
   s.swift_versions = ['5.0']
 
   s.source_files = 'MKAtmosicDFUWapper/Classes/**/*.{h,m,swift}'
