@@ -24,8 +24,8 @@ import blelib
     private var failedBlock: ((Error) -> Void)?
 
     private let observerName = "MKAtmosicDFUWapper"
-    private let maxConnectAttempts = 5
-    private let connectInterval: TimeInterval = 1.5
+    private let maxConnectAttempts = 3
+    private let connectInterval: TimeInterval = 3.0
 
     @objc public func startOTA(filePath: String,
                                peripheral: CBPeripheral,
@@ -50,10 +50,6 @@ import blelib
         tryConnect(peripheral: peripheral, attempt: 0)
     }
 
-    /// invoke() creates a CBCentralManager that needs time to reach .poweredOn.
-    /// The device is still connected through the app's CBCentralManager, so
-    /// connect(peripheral:) should attach to the existing connection once
-    /// blelib's CBCentralManager is powered on.
     private func tryConnect(peripheral: CBPeripheral, attempt: Int) {
         if attempt >= maxConnectAttempts {
             handleFailure("Bluetooth is not ready, please try again")
