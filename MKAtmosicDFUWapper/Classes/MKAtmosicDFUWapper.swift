@@ -25,7 +25,7 @@ import blelib
 
     private let observerName = "MKAtmosicDFUWapper"
     private let maxConnectAttempts = 5
-    private let connectInterval: TimeInterval = 1.0
+    private let connectInterval: TimeInterval = 1.5
 
     @objc public func startOTA(filePath: String,
                                peripheral: CBPeripheral,
@@ -47,15 +47,14 @@ import blelib
         otaManager?.registerObserver(observerName: observerName, observer: self)
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
 
-        let identifier = peripheral.identifier.uuidString
-        tryConnect(deviceIdentifier: identifier, attempt: 0)
+        tryConnect(peripheral: peripheral, attempt: 0)
     }
 
-    /// invoke() creates a CBCentralManager that needs ~1s to reach .poweredOn.
-    /// Use connect(deviceIdentifier:) so blelib's own CBCentralManager retrieves
-    /// the peripheral by UUID instead of reusing a CBPeripheral from another
-    /// CBCentralManager.
-    private func tryConnect(deviceIdentifier: String, attempt: Int) {
+    /// invoke() creates a CBCentralManager that needs time to reach .poweredOn.
+    /// The device is still connected through the app's CBCentralManager, so
+    /// connect(peripheral:) should attach to the existing connection once
+    /// blelib's CBCentralManager is powered on.
+    private func tryConnect(peripheral: CBPeripheral, attempt: Int) {
         if attempt >= maxConnectAttempts {
             handleFailure("Bluetooth is not ready, please try again")
             return
@@ -64,8 +63,8 @@ import blelib
 
         DispatchQueue.main.asyncAfter(deadline: .now() + connectInterval) { [weak self] in
             guard let self = self, !self.isConnected else { return }
-            self.bleManager.connect(deviceIdentifier: deviceIdentifier)
-            self.tryConnect(deviceIdentifier: deviceIdentifier, attempt: attempt + 1)
+            self.bleManager.connect(peripheral: peripheral)
+            self.tryConnect(peripheral: peripheral, attempt: attempt + 1)
         }
     }
 
