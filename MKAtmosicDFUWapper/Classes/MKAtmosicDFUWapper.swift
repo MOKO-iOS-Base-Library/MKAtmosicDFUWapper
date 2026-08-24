@@ -77,13 +77,21 @@ import blelib
     private func cleanup() {
         guard !isCleanedUp else { return }
         isCleanedUp = true
-        if isScanning {
-            bleManager.stopScan()
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            if self.isScanning {
+                self.bleManager.stopScan()
+            }
+            self.bleManager.disconnect()
+            self.otaManager = nil
+            self.bleManager.unregisterBleManagerDelegate(self.observerName)
+            self.cleanupLogFile()
         }
-        otaManager = nil
-        bleManager.disconnect()
-        bleManager.unregisterBleManagerDelegate(observerName)
-        cleanupLogFile()
+        // After OTA, the device reboots and starts advertising.
+        // BleManager may auto-reconnect — disconnect again to cancel it.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.bleManager.disconnect()
+        }
     }
 
     private func cleanupLogFile() {
