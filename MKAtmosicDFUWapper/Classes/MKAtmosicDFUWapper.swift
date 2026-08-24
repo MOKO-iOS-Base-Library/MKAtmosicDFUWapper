@@ -1,5 +1,5 @@
 //
-//  AtmosicDFUWrapper.swift
+//  MKAtmosicDFUWapper.swift
 //  MKAtmosicDFUWapper
 //
 //  Created by aa on 2026/8/24.
@@ -10,7 +10,7 @@ import Foundation
 import CoreBluetooth
 import blelib
 
-@objc public class AtmosicDFUWrapper: NSObject {
+@objc public class MKAtmosicDFUWapper: NSObject {
 
     private let bleManager: BleManager = .shared
     private var otaManager: OtaTaskManager?
@@ -22,7 +22,7 @@ import blelib
     private var sucBlock: (() -> Void)?
     private var failedBlock: ((Error) -> Void)?
 
-    private let observerName = "AtmosicDFUWrapper"
+    private let observerName = "MKAtmosicDFUWapper"
 
     @objc public func startOTA(filePath: String,
                                peripheral: CBPeripheral,
@@ -63,7 +63,7 @@ import blelib
 }
 
 // MARK: - BleManagerDelegate
-extension AtmosicDFUWrapper: BleManagerDelegate {
+extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnFoundPeripheral(wrapPeripheral: WrapScanResult) {}
 
@@ -107,7 +107,7 @@ extension AtmosicDFUWrapper: BleManagerDelegate {
 }
 
 // MARK: - OnATTaskObserver
-extension AtmosicDFUWrapper: OnATTaskObserver {
+extension MKAtmosicDFUWapper: OnATTaskObserver {
 
     public func OnTaskCompleted(completedTask: ATTask) {}
 
@@ -145,7 +145,7 @@ extension AtmosicDFUWrapper: OnATTaskObserver {
 }
 
 // MARK: - OnATOTAInfoObserver
-extension AtmosicDFUWrapper: OnATOTAInfoObserver {
+extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
 
     public func OnFwVersionQueried(fwVersion: String) {}
 

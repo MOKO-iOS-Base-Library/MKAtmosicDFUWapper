@@ -13,7 +13,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '18.0'
   s.swift_versions = ['5.0']
 
-  s.source_files = 'MKAtmosicDFUWapper/Classes/**/*.{h,m,swift}'
+  s.source_files = 'MKAtmosicDFUWapper/Classes/**/*.{swift}'
 
   s.vendored_frameworks = 'MKAtmosicDFUWapper/Frameworks/blelib.xcframework'
 
