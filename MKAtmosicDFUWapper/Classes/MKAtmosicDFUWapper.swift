@@ -58,7 +58,6 @@ import blelib
         otaManager = OtaTaskManager(bleManager: bleManager)
         otaManager?.registerObserver(observerName: observerName, observer: self)
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
-        otaManager?.setForceNoTestBoot = true
 
         // Wait for CBCentralManager to power on, then start scanning.
         // BleManager must discover the device itself — OnConnected needs
