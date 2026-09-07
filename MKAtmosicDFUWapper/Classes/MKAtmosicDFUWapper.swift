@@ -22,8 +22,6 @@ import blelib
     private var isScanning = false
     private var isCallbackCalled = false
     private var isCleanedUp = false
-    private var disconnectTimer: Timer?
-    private var disconnectAttempts = 0
 
     private var progressBlock: ((CGFloat) -> Void)?
     private var sucBlock: (() -> Void)?
@@ -31,7 +29,6 @@ import blelib
 
     private let observerName = "MKAtmosicDFUWapper"
     private let scanTimeout: TimeInterval = 15.0
-    private let maxDisconnectAttempts = 10 // 10s total
 
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
@@ -45,29 +42,24 @@ import blelib
         self.isScanning = false
         self.isCallbackCalled = false
         self.isCleanedUp = false
-        self.disconnectTimer?.invalidate()
-        self.disconnectTimer = nil
-        self.disconnectAttempts = 0
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
 
         bleManager.invoke()
+        bleManager.setFileLoggingEnabled(false)
         bleManager.registerBleManagerDelegate(observerName, self)
 
         otaManager = OtaTaskManager(bleManager: bleManager)
         otaManager?.registerObserver(observerName: observerName, observer: self)
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
+        otaManager?.setForceNoTestBoot(true)
 
-        // Wait for CBCentralManager to power on, then start scanning.
-        // BleManager must discover the device itself — OnConnected needs
-        // a WrapScanResult that only scanning can create.
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             guard let self = self, !self.isConnected else { return }
             self.isScanning = true
             self.bleManager.scanPeripherals()
 
-            // Scan timeout
             DispatchQueue.main.asyncAfter(deadline: .now() + self.scanTimeout) { [weak self] in
                 guard let self = self, self.isScanning, !self.isConnected else { return }
                 self.isScanning = false
@@ -91,45 +83,9 @@ import blelib
                 self.bleManager.stopScan()
             }
             self.otaManager = nil
-            self.cleanupLogFile()
+            self.bleManager.unregisterBleManagerDelegate(self.observerName)
+            self.bleManager.shutdown()
         }
-
-        // Start repeated disconnect attempts.
-        // BleManager auto-reconnects after OTA reboot, so we need to
-        // keep disconnecting until the device fully stops reconnecting.
-        startDisconnectLoop()
-    }
-
-    private func startDisconnectLoop() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            self.disconnectAttempts = 0
-            self.disconnectTimer?.invalidate()
-            self.disconnectTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] timer in
-                guard let self = self else {
-                    timer.invalidate()
-                    return
-                }
-                self.disconnectAttempts += 1
-                if let peripheral = self.targetPeripheral {
-                    self.bleManager.disconnect(peripheral: peripheral)
-                } else {
-                    self.bleManager.disconnect()
-                }
-                if self.disconnectAttempts >= self.maxDisconnectAttempts {
-                    timer.invalidate()
-                    self.disconnectTimer = nil
-                    self.bleManager.unregisterBleManagerDelegate(self.observerName)
-                    // Delete log file after BleManager is fully idle
-                    self.cleanupLogFile()
-                }
-            }
-        }
-    }
-
-    private func cleanupLogFile() {
-        let logUrl = bleManager.getCurrentLogUrl()
-        try? FileManager.default.removeItem(at: logUrl)
     }
 
     private func handleFailure(_ msg: String) {
@@ -173,17 +129,12 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         if !isOTAStarted && !isScanning && !isCleanedUp {
             handleFailure("Device disconnected before OTA started")
         } else if isOTAStarted && !isCallbackCalled && !isCleanedUp {
-            // OTA started and device disconnected — firmware update complete.
-            // OnFirmwareUpdatedSuccess may not fire in all SDK versions,
-            // so treat post-OTA disconnection as success.
             isCallbackCalled = true
             DispatchQueue.main.async {
                 self.sucBlock?()
             }
             cleanup()
         }
-        // If isCleanedUp is true, the disconnect is expected (from our disconnect loop)
-        // — silently ignore it.
     }
 
     public func OnFoundServices(services: [CBService]) {}
@@ -197,8 +148,6 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnCharacWrote(charc: CBCharacteristic) {}
 
     public func OnOtaCharcSetupDone() {
-        // Retrieve FW OTA config first — checkArchive/startFota
-        // will fail with "Need to retrive FW OTA Config" without this.
         otaManager?.queryInfo()
     }
 }
@@ -250,7 +199,6 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
     public func OnFwVersionQueried(fwVersion: String) {}
 
     public func OnOtaProtocolVersion(protocolVersion: UInt8) {
-        // FW OTA config retrieved, now safe to start OTA.
         guard let url = fileUrl else {
             handleFailure("Firmware file URL is invalid")
             return

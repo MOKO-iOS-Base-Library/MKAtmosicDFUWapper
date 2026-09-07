@@ -6,7 +6,7 @@
 	<dict>
 		<key>Headers/blelib-Swift.h</key>
 		<data>
-		vT2pVXHD7NACTn9Zr50Ubae0/f0=
+		fN4lfsAiElZkjN7Ei+V/inMesh0=
 		</data>
 		<key>Headers/blelib.h</key>
 		<data>
@@ -14,27 +14,47 @@
 		</data>
 		<key>Info.plist</key>
 		<data>
-		mK4sZc9KTcNbGR2R/mzOeJPrQVY=
+		GZ5P0XItGI61HFXnmKUHHMJSPzk=
 		</data>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.abi.json</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<data>
 		nnh66GrTt4P0YXZ+EXdClEGGbyY=
 		</data>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.private.swiftinterface</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<data>
-		N0eKmHFA0C4dmSJGEa3WkBK1ewc=
+		HS1mjn3WdOTFaCrw1VJz+vpL9SA=
 		</data>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.swiftdoc</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<data>
-		LPqv64KIiMlFsUG2pWj815HYTG8=
+		TU0Ohae7RuBgpOq5z/BDHV9TMjw=
 		</data>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.swiftinterface</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<data>
-		N0eKmHFA0C4dmSJGEa3WkBK1ewc=
+		HS1mjn3WdOTFaCrw1VJz+vpL9SA=
 		</data>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.swiftmodule</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<data>
-		W1czA7eOTi8HF86O5RLvU+j8OJE=
+		JnZNNr744yeC/6eFeKQhFWKKWkw=
+		</data>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
+		<data>
+		nnh66GrTt4P0YXZ+EXdClEGGbyY=
+		</data>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
+		<data>
+		zesMmU3i1kGpNia/6ENtpdKiVS0=
+		</data>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
+		<data>
+		WM6GCzZpiukMfMi30iEXI+VSJZc=
+		</data>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
+		<data>
+		zesMmU3i1kGpNia/6ENtpdKiVS0=
+		</data>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
+		<data>
+		yJrOxJbuNgFwrXldKvKj7E9IwP8=
 		</data>
 		<key>Modules/module.modulemap</key>
 		<data>
@@ -47,7 +67,7 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			/fC9xT68w9l+8zUQMxgXMNVUlm0qfPLRshedwJNyQHg=
+			n0ZpN4lFDdS+HXhDARRzHAk71CAe385tUosNRS1OLjE=
 			</data>
 		</dict>
 		<key>Headers/blelib.h</key>
@@ -57,39 +77,74 @@
 			XiJF8k63BYvXcazbJrbsEc2i/O4YJFg5Ax1jqRS+kCY=
 			</data>
 		</dict>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.abi.json</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.abi.json</key>
 		<dict>
 			<key>hash2</key>
 			<data>
 			i3PcaH8xBhaeYKfbkvwAUTIT6HqUzHL9DwCSzSRpKT0=
 			</data>
 		</dict>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.private.swiftinterface</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.private.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			yfGQMxWquA0fouPlJoQgYkYF2KI0HLf1V7br54OOSL4=
+			uBebTnJeRiR1+pa53VjqVAp/XNk7CCDElSHUzOsIFVo=
 			</data>
 		</dict>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.swiftdoc</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.swiftdoc</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			3Vbhrmo7TwcRDxRTC8klK4sfQFWgde/sFRx3l3zAPu0=
+			I0pX137W9zo3bDEs2Rd6qmxk5z1P4ky828EQDSIc5Ho=
 			</data>
 		</dict>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.swiftinterface</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.swiftinterface</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			yfGQMxWquA0fouPlJoQgYkYF2KI0HLf1V7br54OOSL4=
+			uBebTnJeRiR1+pa53VjqVAp/XNk7CCDElSHUzOsIFVo=
 			</data>
 		</dict>
-		<key>Modules/blelib.swiftmodule/arm64-apple-ios.swiftmodule</key>
+		<key>Modules/blelib.swiftmodule/arm64-apple-ios-simulator.swiftmodule</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			8/mQ/A4Icz99tOF5P6BfhNvtIGqvnu+F7pjI+WmJOxQ=
+			Zu2BZzc/BM/1jz9g1d+8GUrw/IeaHZRFmSAKhDUVFBQ=
+			</data>
+		</dict>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.abi.json</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			i3PcaH8xBhaeYKfbkvwAUTIT6HqUzHL9DwCSzSRpKT0=
+			</data>
+		</dict>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.private.swiftinterface</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			HYctqSqeJLbJHAW2ZI8uv1Rrl/dAVgJF0latpmb0wxE=
+			</data>
+		</dict>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.swiftdoc</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			GEZWLb6mVcIgfXAdIbEBMp7G66zDmqmpt4rfYAFMURc=
+			</data>
+		</dict>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.swiftinterface</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			HYctqSqeJLbJHAW2ZI8uv1Rrl/dAVgJF0latpmb0wxE=
+			</data>
+		</dict>
+		<key>Modules/blelib.swiftmodule/x86_64-apple-ios-simulator.swiftmodule</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			i9ZEIWak7RLItxDb0CvaK0mk6oKHYjruZCfAswuxvZU=
 			</data>
 		</dict>
 		<key>Modules/module.modulemap</key>

@@ -1,0 +1,10 @@
+framework module blelib {
+  umbrella header "blelib.h"
+  export *
+
+  module * { export * }
+}
+
+module blelib.Swift {
+  header "blelib-Swift.h"
+}
