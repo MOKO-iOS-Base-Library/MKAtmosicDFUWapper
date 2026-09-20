@@ -38,6 +38,10 @@ import blelib
     private var otaCharcSetupFired = false
     private var passwordFallbackTimer: DispatchSourceTimer?
 
+    private var waitingForReconnect = false
+    private var reconnectTimeout: TimeInterval = 30.0
+    private var reconnectTimer: DispatchSourceTimer?
+
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
                                progressBlock: @escaping (CGFloat) -> Void,
@@ -52,6 +56,7 @@ import blelib
         self.isCleanedUp = false
         self.passwordSent = false
         self.otaCharcSetupFired = false
+        self.waitingForReconnect = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -59,9 +64,6 @@ import blelib
         bleManager.invoke()
         bleManager.setFileLoggingEnabled(false)
         bleManager.registerBleManagerDelegate(observerName, self)
-
-        // 关键：先不创建 OtaTaskManager！
-        // 等密码写入成功后再创建，防止它自动触发 queryInfo → lockSession
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             guard let self = self, !self.isConnected else { return }
@@ -87,6 +89,8 @@ import blelib
 
         passwordFallbackTimer?.cancel()
         passwordFallbackTimer = nil
+        reconnectTimer?.cancel()
+        reconnectTimer = nil
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -111,7 +115,6 @@ import blelib
         cleanup()
     }
 
-    /// 写入连接密码到 AA04
     private func sendConnectPassword(to charc: CBCharacteristic) {
         guard let peripheral = targetPeripheral else { return }
 
@@ -120,7 +123,6 @@ import blelib
         NSLog("[MKAtmosicDFU] Writing password to AA04 via peripheral.writeValue...")
         peripheral.writeValue(passwordData, for: charc, type: .withResponse)
 
-        // 备用定时器：如果 2 秒内没收到 OnCharacWrote 回调，也继续
         passwordFallbackTimer = DispatchSource.makeTimerSource(queue: .main)
         passwordFallbackTimer?.schedule(deadline: .now() + 2.0)
         passwordFallbackTimer?.setEventHandler { [weak self] in
@@ -133,7 +135,6 @@ import blelib
         passwordFallbackTimer?.resume()
     }
 
-    /// 密码确认后，创建 OtaTaskManager 并启动 OTA 流程
     private func onPasswordConfirmed() {
         guard !passwordSent else { return }
         passwordSent = true
@@ -149,12 +150,10 @@ import blelib
         otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
         otaManager?.setForceNoTestBoot(true)
 
-        // OnOtaCharcSetupDone 可能已经触发过了
         if otaCharcSetupFired {
             NSLog("[MKAtmosicDFU] OnOtaCharcSetupDone already fired, calling queryInfo() manually")
             otaManager?.queryInfo()
         }
-        // 否则 OtaTaskManager 会在 OnOtaCharcSetupDone 时自动调 queryInfo()
     }
 }
 
@@ -179,26 +178,51 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
         isConnected = true
         targetPeripheral = wrapPeripheral.peripheral
-        NSLog("[MKAtmosicDFU] Connected, waiting for characteristics...")
+
+        if waitingForReconnect {
+            NSLog("[MKAtmosicDFU] Reconnected after lockSession reboot, OTA should resume automatically")
+            waitingForReconnect = false
+            reconnectTimer?.cancel()
+            reconnectTimer = nil
+        } else {
+            NSLog("[MKAtmosicDFU] Connected, waiting for characteristics...")
+        }
     }
 
     public func OnDisconnected() {
         isConnected = false
-        if !isOTAStarted && !isScanning && !isCleanedUp {
-            handleFailure("Device disconnected before OTA started")
-        } else if isOTAStarted && !isCallbackCalled && !isCleanedUp {
+
+        if isOTAStarted && !isCallbackCalled && !isCleanedUp {
             isCallbackCalled = true
             DispatchQueue.main.async {
                 self.sucBlock?()
             }
             cleanup()
+        } else if otaManager != nil && !isOTAStarted && !isCallbackCalled && !isCleanedUp {
+            NSLog("[MKAtmosicDFU] Disconnected after lockSession, waiting for auto-reconnect...")
+            waitingForReconnect = true
+
+            reconnectTimer = DispatchSource.makeTimerSource(queue: .main)
+            reconnectTimer?.schedule(deadline: .now() + reconnectTimeout)
+            reconnectTimer?.setEventHandler { [weak self] in
+                guard let self = self else { return }
+                if self.waitingForReconnect {
+                    NSLog("[MKAtmosicDFU] Reconnect timeout after \(self.reconnectTimeout)s")
+                    self.handleFailure("Device did not reconnect after reboot, please try again")
+                }
+            }
+            reconnectTimer?.resume()
+        } else if !isOTAStarted && !isScanning && !isCleanedUp {
+            handleFailure("Device disconnected before OTA started")
         }
     }
 
     public func OnFoundServices(services: [CBService]) {}
 
     public func OnFounCharacteristics(charcs: [CBCharacteristic]) {
-        // 特征值发现后，找到 AA04 并写入密码
+        if waitingForReconnect {
+            return
+        }
         for charc in charcs {
             if charc.uuid == passwordCharcUUID {
                 NSLog("[MKAtmosicDFU] Found AA04 characteristic, sending password...")
@@ -222,8 +246,6 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnOtaCharcSetupDone() {
         NSLog("[MKAtmosicDFU] OnOtaCharcSetupDone")
-        // 如果 OtaTaskManager 已创建，它自己的 override 会自动调 queryInfo()
-        // 如果还没创建（密码未确认），标记事件已触发，等密码确认后手动调 queryInfo()
         if otaManager == nil {
             otaCharcSetupFired = true
             NSLog("[MKAtmosicDFU] OtaTaskManager not yet created, flag set for later")
@@ -254,7 +276,9 @@ extension MKAtmosicDFUWapper: OnATTaskObserver {
         }
     }
 
-    public func OnReconnecting() {}
+    public func OnReconnecting() {
+        NSLog("[MKAtmosicDFU] OnReconnecting...")
+    }
 
     public func OnFirmwareUpdatedSuccess() {
         guard !isCallbackCalled else { return }
