@@ -344,6 +344,10 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
     public func OnFwVersionQueried(fwVersion: String) {}
 
     public func OnOtaProtocolVersion(protocolVersion: UInt8) {
+        if isOTAStarted {
+            NSLog("[MKAtmosicDFU] OnOtaProtocolVersion after reconnect (already started), skipping startFota")
+            return
+        }
         NSLog("[MKAtmosicDFU] OnOtaProtocolVersion: \(protocolVersion), starting FOTA...")
         guard let url = fileUrl else {
             handleFailure("Firmware file URL is invalid")
