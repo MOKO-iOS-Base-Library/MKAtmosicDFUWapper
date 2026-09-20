@@ -45,6 +45,9 @@ import blelib
     private var fotaTotalTimeout: TimeInterval = 300.0
     private var fotaTotalTimer: DispatchSourceTimer?
 
+    private var fotaReconnectCount = 0
+    private let maxFotaReconnects = 5
+
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
                                progressBlock: @escaping (CGFloat) -> Void,
@@ -60,6 +63,7 @@ import blelib
         self.passwordSent = false
         self.otaCharcSetupFired = false
         self.waitingForReconnect = false
+        self.fotaReconnectCount = 0
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -184,8 +188,13 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         isConnected = true
         targetPeripheral = wrapPeripheral.peripheral
 
-        if waitingForReconnect {
-            NSLog("[MKAtmosicDFU] Reconnected after lockSession reboot, OTA should resume automatically")
+        if isOTAStarted {
+            NSLog("[MKAtmosicDFU] Reconnected during FOTA, OtaTaskManager will resume upload")
+            reconnectTimer?.cancel()
+            reconnectTimer = nil
+            waitingForReconnect = false
+        } else if waitingForReconnect {
+            NSLog("[MKAtmosicDFU] Reconnected after lockSession reboot")
             waitingForReconnect = false
             reconnectTimer?.cancel()
             reconnectTimer = nil
@@ -200,7 +209,12 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         isConnected = false
 
         if isOTAStarted && !isCallbackCalled && !isCleanedUp {
-            NSLog("[MKAtmosicDFU] Disconnected during FOTA, waiting for reconnect to continue...")
+            fotaReconnectCount += 1
+            NSLog("[MKAtmosicDFU] Disconnected during FOTA (reconnect #\(fotaReconnectCount)/\(maxFotaReconnects))")
+            if fotaReconnectCount > maxFotaReconnects {
+                handleFailure("Device reconnected too many times during FOTA, please try again")
+                return
+            }
             waitingForReconnect = true
             bleManager.reconnect()
 
@@ -238,8 +252,12 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnFoundServices(services: [CBService]) {}
 
     public func OnFounCharacteristics(charcs: [CBCharacteristic]) {
+        if isOTAStarted {
+            NSLog("[MKAtmosicDFU] FOTA in progress, skipping password - OtaTaskManager handles reconnect")
+            return
+        }
         if waitingForReconnect {
-            NSLog("[MKAtmosicDFU] Reconnected - skipping password, OTA should resume")
+            NSLog("[MKAtmosicDFU] Reconnected - skipping password")
             return
         }
         for charc in charcs {
@@ -257,7 +275,7 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnCharacWrote(charc: CBCharacteristic) {
         NSLog("[MKAtmosicDFU] OnCharacWrote: \(charc.uuid.uuidString)")
-        if charc.uuid == passwordCharcUUID {
+        if charc.uuid == passwordCharcUUID && !isOTAStarted {
             NSLog("[MKAtmosicDFU] Password write confirmed by device!")
             onPasswordConfirmed()
         }
