@@ -39,7 +39,7 @@ import blelib
     private var passwordFallbackTimer: DispatchSourceTimer?
 
     private var waitingForReconnect = false
-    private var reconnectTimeout: TimeInterval = 30.0
+    private var reconnectTimeout: TimeInterval = 60.0
     private var reconnectTimer: DispatchSourceTimer?
 
     @objc public func startOTA(filePath: String,
@@ -190,6 +190,8 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     }
 
     public func OnDisconnected() {
+        NSLog("[MKAtmosicDFU] OnDisconnected: isOTAStarted=\(isOTAStarted), otaManager=\(otaManager != nil), waitingForReconnect=\(waitingForReconnect)")
+
         isConnected = false
 
         if isOTAStarted && !isCallbackCalled && !isCleanedUp {
@@ -199,8 +201,9 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
             }
             cleanup()
         } else if otaManager != nil && !isOTAStarted && !isCallbackCalled && !isCleanedUp {
-            NSLog("[MKAtmosicDFU] Disconnected after lockSession, waiting for auto-reconnect...")
+            NSLog("[MKAtmosicDFU] Disconnected after lockSession, calling reconnect...")
             waitingForReconnect = true
+            bleManager.reconnect()
 
             reconnectTimer = DispatchSource.makeTimerSource(queue: .main)
             reconnectTimer?.schedule(deadline: .now() + reconnectTimeout)
@@ -266,6 +269,11 @@ extension MKAtmosicDFUWapper: OnATTaskObserver {
     }
 
     public func OnTaskError(errorTask: ATTask, errorMsg: String) {
+        NSLog("[MKAtmosicDFU] OnTaskError: \(errorMsg)")
+        if errorMsg.contains("unexpected event") {
+            NSLog("[MKAtmosicDFU] Ignoring unexpected event error during lockSession reboot")
+            return
+        }
         handleFailure(errorMsg)
     }
 
