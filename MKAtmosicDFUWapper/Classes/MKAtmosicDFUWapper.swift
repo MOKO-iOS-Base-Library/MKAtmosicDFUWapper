@@ -42,6 +42,9 @@ import blelib
     private var reconnectTimeout: TimeInterval = 60.0
     private var reconnectTimer: DispatchSourceTimer?
 
+    private var fotaTotalTimeout: TimeInterval = 300.0
+    private var fotaTotalTimer: DispatchSourceTimer?
+
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
                                progressBlock: @escaping (CGFloat) -> Void,
@@ -91,6 +94,8 @@ import blelib
         passwordFallbackTimer = nil
         reconnectTimer?.cancel()
         reconnectTimer = nil
+        fotaTotalTimer?.cancel()
+        fotaTotalTimer = nil
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -195,11 +200,21 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         isConnected = false
 
         if isOTAStarted && !isCallbackCalled && !isCleanedUp {
-            isCallbackCalled = true
-            DispatchQueue.main.async {
-                self.sucBlock?()
+            NSLog("[MKAtmosicDFU] Disconnected during FOTA, waiting for reconnect to continue...")
+            waitingForReconnect = true
+            bleManager.reconnect()
+
+            reconnectTimer?.cancel()
+            reconnectTimer = DispatchSource.makeTimerSource(queue: .main)
+            reconnectTimer?.schedule(deadline: .now() + reconnectTimeout)
+            reconnectTimer?.setEventHandler { [weak self] in
+                guard let self = self else { return }
+                if self.waitingForReconnect {
+                    NSLog("[MKAtmosicDFU] Reconnect timeout after \(self.reconnectTimeout)s")
+                    self.handleFailure("Device did not reconnect after FOTA reboot, please try again")
+                }
             }
-            cleanup()
+            reconnectTimer?.resume()
         } else if otaManager != nil && !isOTAStarted && !isCallbackCalled && !isCleanedUp {
             NSLog("[MKAtmosicDFU] Disconnected after lockSession, calling reconnect...")
             waitingForReconnect = true
@@ -224,6 +239,7 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnFounCharacteristics(charcs: [CBCharacteristic]) {
         if waitingForReconnect {
+            NSLog("[MKAtmosicDFU] Reconnected - skipping password, OTA should resume")
             return
         }
         for charc in charcs {
@@ -310,6 +326,7 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
     public func OnFwVersionQueried(fwVersion: String) {}
 
     public func OnOtaProtocolVersion(protocolVersion: UInt8) {
+        NSLog("[MKAtmosicDFU] OnOtaProtocolVersion: \(protocolVersion), starting FOTA...")
         guard let url = fileUrl else {
             handleFailure("Firmware file URL is invalid")
             return
@@ -318,6 +335,18 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
             try otaManager?.checkArchive(selectedFileUri: url)
             try otaManager?.startFota(upgradeBin: true, upgradeNvds: false)
             isOTAStarted = true
+            NSLog("[MKAtmosicDFU] FOTA started, isOTAStarted=true")
+
+            fotaTotalTimer = DispatchSource.makeTimerSource(queue: .main)
+            fotaTotalTimer?.schedule(deadline: .now() + fotaTotalTimeout)
+            fotaTotalTimer?.setEventHandler { [weak self] in
+                guard let self = self else { return }
+                if !self.isCallbackCalled {
+                    NSLog("[MKAtmosicDFU] FOTA total timeout after \(self.fotaTotalTimeout)s")
+                    self.handleFailure("Firmware update timed out, please try again")
+                }
+            }
+            fotaTotalTimer?.resume()
         } catch OtaError.runtimeError(let msg) {
             handleFailure(msg)
         } catch {
