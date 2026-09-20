@@ -29,14 +29,14 @@ import blelib
 
     private let observerName = "MKAtmosicDFUWapper"
     private let scanTimeout: TimeInterval = 15.0
-    private let passwordTimeout: TimeInterval = 10.0
 
     private let passwordServiceUUID = CBUUID(string: "AA00")
     private let passwordCharcUUID = CBUUID(string: "AA04")
     private let connectPassword = "MOKOMOKO"
 
     private var passwordSent = false
-    private var passwordWriteTimer: DispatchSourceTimer?
+    private var otaCharcSetupFired = false
+    private var passwordFallbackTimer: DispatchSourceTimer?
 
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
@@ -51,6 +51,7 @@ import blelib
         self.isCallbackCalled = false
         self.isCleanedUp = false
         self.passwordSent = false
+        self.otaCharcSetupFired = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -59,10 +60,8 @@ import blelib
         bleManager.setFileLoggingEnabled(false)
         bleManager.registerBleManagerDelegate(observerName, self)
 
-        otaManager = OtaTaskManager(bleManager: bleManager)
-        otaManager?.registerObserver(observerName: observerName, observer: self)
-        otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
-        otaManager?.setForceNoTestBoot(true)
+        // 关键：先不创建 OtaTaskManager！
+        // 等密码写入成功后再创建，防止它自动触发 queryInfo → lockSession
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) { [weak self] in
             guard let self = self, !self.isConnected else { return }
@@ -86,8 +85,8 @@ import blelib
         guard !isCleanedUp else { return }
         isCleanedUp = true
 
-        passwordWriteTimer?.cancel()
-        passwordWriteTimer = nil
+        passwordFallbackTimer?.cancel()
+        passwordFallbackTimer = nil
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -112,24 +111,50 @@ import blelib
         cleanup()
     }
 
-    private func sendConnectPassword() {
-        guard !passwordSent else { return }
+    /// 写入连接密码到 AA04
+    private func sendConnectPassword(to charc: CBCharacteristic) {
+        guard let peripheral = targetPeripheral else { return }
 
         let passwordData = connectPassword.data(using: .utf8) ?? Data()
-        bleManager.writeCharc(serviceUUID: passwordServiceUUID,
-                              charcUUID: passwordCharcUUID,
-                              data: passwordData,
-                              isWithResp: true)
 
-        passwordWriteTimer = DispatchSource.makeTimerSource(queue: .main)
-        passwordWriteTimer?.schedule(deadline: .now() + passwordTimeout)
-        passwordWriteTimer?.setEventHandler { [weak self] in
+        NSLog("[MKAtmosicDFU] Writing password to AA04 via peripheral.writeValue...")
+        peripheral.writeValue(passwordData, for: charc, type: .withResponse)
+
+        // 备用定时器：如果 2 秒内没收到 OnCharacWrote 回调，也继续
+        passwordFallbackTimer = DispatchSource.makeTimerSource(queue: .main)
+        passwordFallbackTimer?.schedule(deadline: .now() + 2.0)
+        passwordFallbackTimer?.setEventHandler { [weak self] in
             guard let self = self else { return }
             if !self.passwordSent {
-                self.handleFailure("Password authentication timeout")
+                NSLog("[MKAtmosicDFU] OnCharacWrote not received within 2s, proceeding anyway")
+                self.onPasswordConfirmed()
             }
         }
-        passwordWriteTimer?.resume()
+        passwordFallbackTimer?.resume()
+    }
+
+    /// 密码确认后，创建 OtaTaskManager 并启动 OTA 流程
+    private func onPasswordConfirmed() {
+        guard !passwordSent else { return }
+        passwordSent = true
+        passwordFallbackTimer?.cancel()
+        passwordFallbackTimer = nil
+
+        guard !isCleanedUp else { return }
+
+        NSLog("[MKAtmosicDFU] Password confirmed, creating OtaTaskManager...")
+
+        otaManager = OtaTaskManager(bleManager: bleManager)
+        otaManager?.registerObserver(observerName: observerName, observer: self)
+        otaManager?.registerOtaInfoObserver(observerName: observerName, observer: self)
+        otaManager?.setForceNoTestBoot(true)
+
+        // OnOtaCharcSetupDone 可能已经触发过了
+        if otaCharcSetupFired {
+            NSLog("[MKAtmosicDFU] OnOtaCharcSetupDone already fired, calling queryInfo() manually")
+            otaManager?.queryInfo()
+        }
+        // 否则 OtaTaskManager 会在 OnOtaCharcSetupDone 时自动调 queryInfo()
     }
 }
 
@@ -154,6 +179,7 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
         isConnected = true
         targetPeripheral = wrapPeripheral.peripheral
+        NSLog("[MKAtmosicDFU] Connected, waiting for characteristics...")
     }
 
     public func OnDisconnected() {
@@ -172,9 +198,11 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnFoundServices(services: [CBService]) {}
 
     public func OnFounCharacteristics(charcs: [CBCharacteristic]) {
+        // 特征值发现后，找到 AA04 并写入密码
         for charc in charcs {
             if charc.uuid == passwordCharcUUID {
-                sendConnectPassword()
+                NSLog("[MKAtmosicDFU] Found AA04 characteristic, sending password...")
+                sendConnectPassword(to: charc)
                 break
             }
         }
@@ -185,16 +213,21 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnCharacNotifyEnabled(charc: CBCharacteristic) {}
 
     public func OnCharacWrote(charc: CBCharacteristic) {
+        NSLog("[MKAtmosicDFU] OnCharacWrote: \(charc.uuid.uuidString)")
         if charc.uuid == passwordCharcUUID {
-            passwordSent = true
-            passwordWriteTimer?.cancel()
-            passwordWriteTimer = nil
+            NSLog("[MKAtmosicDFU] Password write confirmed by device!")
+            onPasswordConfirmed()
         }
     }
 
     public func OnOtaCharcSetupDone() {
-        // OtaTaskManager internally calls queryInfo() on this callback.
-        // We don't call it here to avoid double invocation.
+        NSLog("[MKAtmosicDFU] OnOtaCharcSetupDone")
+        // 如果 OtaTaskManager 已创建，它自己的 override 会自动调 queryInfo()
+        // 如果还没创建（密码未确认），标记事件已触发，等密码确认后手动调 queryInfo()
+        if otaManager == nil {
+            otaCharcSetupFired = true
+            NSLog("[MKAtmosicDFU] OtaTaskManager not yet created, flag set for later")
+        }
     }
 }
 
