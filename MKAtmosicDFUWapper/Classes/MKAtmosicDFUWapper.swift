@@ -36,7 +36,6 @@ import blelib
     private let connectPassword = "MOKOMOKO"
 
     private var passwordSent = false
-    private var otaCharcReady = false
     private var passwordWriteTimer: DispatchSourceTimer?
 
     @objc public func startOTA(filePath: String,
@@ -52,7 +51,6 @@ import blelib
         self.isCallbackCalled = false
         self.isCleanedUp = false
         self.passwordSent = false
-        self.otaCharcReady = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -115,10 +113,7 @@ import blelib
     }
 
     private func sendConnectPassword() {
-        guard let peripheral = targetPeripheral else {
-            handleFailure("No peripheral connected")
-            return
-        }
+        guard !passwordSent else { return }
 
         let passwordData = connectPassword.data(using: .utf8) ?? Data()
         bleManager.writeCharc(serviceUUID: passwordServiceUUID,
@@ -135,13 +130,6 @@ import blelib
             }
         }
         passwordWriteTimer?.resume()
-    }
-
-    private func tryStartOTA() {
-        guard passwordSent, otaCharcReady, !isOTAStarted else { return }
-        passwordWriteTimer?.cancel()
-        passwordWriteTimer = nil
-        otaManager?.queryInfo()
     }
 }
 
@@ -166,7 +154,6 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
         isConnected = true
         targetPeripheral = wrapPeripheral.peripheral
-        sendConnectPassword()
     }
 
     public func OnDisconnected() {
@@ -184,7 +171,14 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnFoundServices(services: [CBService]) {}
 
-    public func OnFounCharacteristics(charcs: [CBCharacteristic]) {}
+    public func OnFounCharacteristics(charcs: [CBCharacteristic]) {
+        for charc in charcs {
+            if charc.uuid == passwordCharcUUID {
+                sendConnectPassword()
+                break
+            }
+        }
+    }
 
     public func OnCharcteristicChanged(charc: CBCharacteristic) {}
 
@@ -193,13 +187,14 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnCharacWrote(charc: CBCharacteristic) {
         if charc.uuid == passwordCharcUUID {
             passwordSent = true
-            tryStartOTA()
+            passwordWriteTimer?.cancel()
+            passwordWriteTimer = nil
         }
     }
 
     public func OnOtaCharcSetupDone() {
-        otaCharcReady = true
-        tryStartOTA()
+        // OtaTaskManager internally calls queryInfo() on this callback.
+        // We don't call it here to avoid double invocation.
     }
 }
 
