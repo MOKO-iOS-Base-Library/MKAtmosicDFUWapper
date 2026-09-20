@@ -29,6 +29,15 @@ import blelib
 
     private let observerName = "MKAtmosicDFUWapper"
     private let scanTimeout: TimeInterval = 15.0
+    private let passwordTimeout: TimeInterval = 10.0
+
+    private let passwordServiceUUID = CBUUID(string: "AA00")
+    private let passwordCharcUUID = CBUUID(string: "AA04")
+    private let connectPassword = "MOKOMOKO"
+
+    private var passwordSent = false
+    private var otaCharcReady = false
+    private var passwordWriteTimer: DispatchSourceTimer?
 
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
@@ -42,6 +51,8 @@ import blelib
         self.isScanning = false
         self.isCallbackCalled = false
         self.isCleanedUp = false
+        self.passwordSent = false
+        self.otaCharcReady = false
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -77,6 +88,9 @@ import blelib
         guard !isCleanedUp else { return }
         isCleanedUp = true
 
+        passwordWriteTimer?.cancel()
+        passwordWriteTimer = nil
+
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
             if self.isScanning {
@@ -98,6 +112,36 @@ import blelib
             self.failedBlock?(error)
         }
         cleanup()
+    }
+
+    private func sendConnectPassword() {
+        guard let peripheral = targetPeripheral else {
+            handleFailure("No peripheral connected")
+            return
+        }
+
+        let passwordData = connectPassword.data(using: .utf8) ?? Data()
+        bleManager.writeCharc(serviceUUID: passwordServiceUUID,
+                              charcUUID: passwordCharcUUID,
+                              data: passwordData,
+                              isWithResp: true)
+
+        passwordWriteTimer = DispatchSource.makeTimerSource(queue: .main)
+        passwordWriteTimer?.schedule(deadline: .now() + passwordTimeout)
+        passwordWriteTimer?.setEventHandler { [weak self] in
+            guard let self = self else { return }
+            if !self.passwordSent {
+                self.handleFailure("Password authentication timeout")
+            }
+        }
+        passwordWriteTimer?.resume()
+    }
+
+    private func tryStartOTA() {
+        guard passwordSent, otaCharcReady, !isOTAStarted else { return }
+        passwordWriteTimer?.cancel()
+        passwordWriteTimer = nil
+        otaManager?.queryInfo()
     }
 }
 
@@ -122,6 +166,7 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
         isConnected = true
         targetPeripheral = wrapPeripheral.peripheral
+        sendConnectPassword()
     }
 
     public func OnDisconnected() {
@@ -145,10 +190,16 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
 
     public func OnCharacNotifyEnabled(charc: CBCharacteristic) {}
 
-    public func OnCharacWrote(charc: CBCharacteristic) {}
+    public func OnCharacWrote(charc: CBCharacteristic) {
+        if charc.uuid == passwordCharcUUID {
+            passwordSent = true
+            tryStartOTA()
+        }
+    }
 
     public func OnOtaCharcSetupDone() {
-        otaManager?.queryInfo()
+        otaCharcReady = true
+        tryStartOTA()
     }
 }
 
