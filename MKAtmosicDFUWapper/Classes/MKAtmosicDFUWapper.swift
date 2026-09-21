@@ -48,6 +48,8 @@ import blelib
     private var fotaReconnectCount = 0
     private let maxFotaReconnects = 5
 
+    private var startFotaCallCount = 0
+
     @objc public func startOTA(filePath: String,
                                deviceIdentifier: String,
                                progressBlock: @escaping (CGFloat) -> Void,
@@ -64,6 +66,7 @@ import blelib
         self.otaCharcSetupFired = false
         self.waitingForReconnect = false
         self.fotaReconnectCount = 0
+        self.startFotaCallCount = 0
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -344,11 +347,14 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
     public func OnFwVersionQueried(fwVersion: String) {}
 
     public func OnOtaProtocolVersion(protocolVersion: UInt8) {
-        if isOTAStarted {
-            NSLog("[MKAtmosicDFU] OnOtaProtocolVersion after reconnect (already started), skipping startFota")
+        startFotaCallCount += 1
+        NSLog("[MKAtmosicDFU] OnOtaProtocolVersion: \(protocolVersion), startFotaCallCount=\(startFotaCallCount)")
+
+        if startFotaCallCount > 2 {
+            NSLog("[MKAtmosicDFU] startFota already called twice, skipping")
             return
         }
-        NSLog("[MKAtmosicDFU] OnOtaProtocolVersion: \(protocolVersion), starting FOTA...")
+
         guard let url = fileUrl else {
             handleFailure("Firmware file URL is invalid")
             return
@@ -356,19 +362,25 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
         do {
             try otaManager?.checkArchive(selectedFileUri: url)
             try otaManager?.startFota(upgradeBin: true, upgradeNvds: false)
-            isOTAStarted = true
-            NSLog("[MKAtmosicDFU] FOTA started, isOTAStarted=true")
-
-            fotaTotalTimer = DispatchSource.makeTimerSource(queue: .main)
-            fotaTotalTimer?.schedule(deadline: .now() + fotaTotalTimeout)
-            fotaTotalTimer?.setEventHandler { [weak self] in
-                guard let self = self else { return }
-                if !self.isCallbackCalled {
-                    NSLog("[MKAtmosicDFU] FOTA total timeout after \(self.fotaTotalTimeout)s")
-                    self.handleFailure("Firmware update timed out, please try again")
-                }
+            if startFotaCallCount == 1 {
+                isOTAStarted = true
+                NSLog("[MKAtmosicDFU] First startFota (lockSession phase), isOTAStarted=true")
+            } else {
+                NSLog("[MKAtmosicDFU] Second startFota (upload phase after reconnect)")
             }
-            fotaTotalTimer?.resume()
+
+            if fotaTotalTimer == nil {
+                fotaTotalTimer = DispatchSource.makeTimerSource(queue: .main)
+                fotaTotalTimer?.schedule(deadline: .now() + fotaTotalTimeout)
+                fotaTotalTimer?.setEventHandler { [weak self] in
+                    guard let self = self else { return }
+                    if !self.isCallbackCalled {
+                        NSLog("[MKAtmosicDFU] FOTA total timeout after \(self.fotaTotalTimeout)s")
+                        self.handleFailure("Firmware update timed out, please try again")
+                    }
+                }
+                fotaTotalTimer?.resume()
+            }
         } catch OtaError.runtimeError(let msg) {
             handleFailure(msg)
         } catch {
