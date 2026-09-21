@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name             = 'MKAtmosicDFUWapper'
-  s.version          = '0.2.9'
+  s.version          = '0.3.0'
   s.summary          = 'Atmosic DFU wrapper for BLE firmware updates.'
   s.description      = <<-DESC
   Wraps the Atmosic blelib SDK to provide a simple Objective-C interface for OTA firmware updates.
@@ -22,6 +22,12 @@ Pod::Spec.new do |s|
 
   s.xcconfig = {
     'BUILD_LIBRARY_FOR_DISTRIBUTION' => 'YES'
+  }
+
+  s.script_phase = {
+    :name => 'Remove duplicate SwiftCBOR/SwiftProtobuf frameworks',
+    :script => 'rm -rf "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftCBOR.framework" "${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/SwiftProtobuf.framework"',
+    :execution_position => :after_compile
   }
 
 end
