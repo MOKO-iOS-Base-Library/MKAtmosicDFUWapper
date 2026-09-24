@@ -22,6 +22,10 @@ import blelib
     private var isScanning = false
     private var isCallbackCalled = false
     private var isCleanedUp = false
+    private var startFotaCallCount = 0
+    private var fotaReconnectCount = 0
+    private let maxFotaReconnects = 5
+    private var reconnectTimer: DispatchSourceTimer?
 
     private var progressBlock: ((CGFloat) -> Void)?
     private var sucBlock: (() -> Void)?
@@ -42,6 +46,8 @@ import blelib
         self.isScanning = false
         self.isCallbackCalled = false
         self.isCleanedUp = false
+        self.startFotaCallCount = 0
+        self.fotaReconnectCount = 0
         self.progressBlock = progressBlock
         self.sucBlock = sucBlock
         self.failedBlock = failedBlock
@@ -76,6 +82,9 @@ import blelib
     private func cleanup() {
         guard !isCleanedUp else { return }
         isCleanedUp = true
+
+        reconnectTimer?.cancel()
+        reconnectTimer = nil
 
         DispatchQueue.main.async { [weak self] in
             guard let self = self else { return }
@@ -122,6 +131,10 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnConnected(wrapPeripheral: WrapScanResult, mtu: Int) {
         isConnected = true
         targetPeripheral = wrapPeripheral.peripheral
+        if isOTAStarted {
+            reconnectTimer?.cancel()
+            reconnectTimer = nil
+        }
     }
 
     public func OnDisconnected() {
@@ -129,11 +142,23 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
         if !isOTAStarted && !isScanning && !isCleanedUp {
             handleFailure("Device disconnected before OTA started")
         } else if isOTAStarted && !isCallbackCalled && !isCleanedUp {
-            isCallbackCalled = true
-            DispatchQueue.main.async {
-                self.sucBlock?()
+            fotaReconnectCount += 1
+            if fotaReconnectCount > maxFotaReconnects {
+                handleFailure("OTA reconnection failed after \(maxFotaReconnects) attempts")
+                return
             }
-            cleanup()
+            reconnectTimer?.cancel()
+            let timer = DispatchSource.makeTimerSource()
+            timer.schedule(deadline: .now() + 60)
+            timer.setEventHandler { [weak self] in
+                guard let self = self, !self.isCallbackCalled else { return }
+                self.handleFailure("OTA reconnection timeout")
+            }
+            timer.resume()
+            reconnectTimer = timer
+            DispatchQueue.main.async { [weak self] in
+                self?.bleManager.reconnect()
+            }
         }
     }
 
@@ -148,7 +173,6 @@ extension MKAtmosicDFUWapper: BleManagerDelegate {
     public func OnCharacWrote(charc: CBCharacteristic) {}
 
     public func OnOtaCharcSetupDone() {
-        otaManager?.queryInfo()
     }
 }
 
@@ -165,6 +189,9 @@ extension MKAtmosicDFUWapper: OnATTaskObserver {
     }
 
     public func OnTaskError(errorTask: ATTask, errorMsg: String) {
+        if errorMsg.contains("unexpected event") {
+            return
+        }
         handleFailure(errorMsg)
     }
 
@@ -199,6 +226,10 @@ extension MKAtmosicDFUWapper: OnATOTAInfoObserver {
     public func OnFwVersionQueried(fwVersion: String) {}
 
     public func OnOtaProtocolVersion(protocolVersion: UInt8) {
+        startFotaCallCount += 1
+        if startFotaCallCount > 2 {
+            return
+        }
         guard let url = fileUrl else {
             handleFailure("Firmware file URL is invalid")
             return
