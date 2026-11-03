@@ -13,8 +13,6 @@ let package = Package(
         )
     ],
     dependencies: [
-        .package(url: "https://github.com/unrelentingtech/SwiftCBOR.git", from: "0.6.0"),
-        .package(url: "https://github.com/apple/swift-protobuf.git", from: "1.25.0"),
     ],
     targets: [
         .binaryTarget(
@@ -25,8 +23,6 @@ let package = Package(
             name: "MKAtmosicDFUWapper",
             dependencies: [
                 "blelib",
-                .product(name: "SwiftCBOR", package: "SwiftCBOR"),
-                .product(name: "SwiftProtobuf", package: "swift-protobuf"),
             ],
             path: "MKAtmosicDFUWapper/Classes",
             swiftSettings: [
